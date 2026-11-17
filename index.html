@@ -18,16 +18,19 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Figtree:wght@400;500;600;700&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link rel="preload" href="catalog.json" as="fetch" crossorigin>
+<link rel="preload" href="devociones/divino-nino/data.json" as="fetch" crossorigin>
 <style>
 :root{
-  --noche:#1F2456; --noche-2:#2C3270; --cenidor:#3D5BB0; --rosa:#E5789B; --rosa-2:#F7D3DF; --oro:#E8B64C; --oro-2:#F8E6BC;
+  --noche:#1F2456; --noche-2:#2C3270; --cenidor:#3D5BB0; --rosa:#E5789B; --rosa-txt:#B03F68; --rosa-2:#F7D3DF; --oro:#E8B64C; --oro-2:#F8E6BC;
   --bg:#F2F0FA; --surface:#FFFFFF; --surface-2:#E9E6F5; --ink:#221B3A; --ink-2:#5E5878; --line:#DCD7EC;
   --display:"Marcellus",Georgia,serif; --read:"Lora",Georgia,serif; --ui:"Figtree",system-ui,sans-serif;
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
   --tabh:64px; --ease:cubic-bezier(.2,.8,.2,1);
 }
-@media (prefers-color-scheme:dark){:root{
+@media (prefers-color-scheme:dark){:root{--rosa-txt:#F0A3BB;
   --bg:#13152E; --surface:#1D2044; --surface-2:#272B57; --ink:#F1EEFA; --ink-2:#A8A3C4; --line:#2F3463; --rosa-2:#4A2A44; --oro-2:#4A3B1C;}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%}
@@ -80,7 +83,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 
 /* ---------- Hoy ---------- */
 .today-head{text-align:center;padding:8px 24px 0}
-.today-head .day{font-size:14px;font-weight:600;color:var(--rosa)}
+.today-head .day{font-size:14px;font-weight:600;color:var(--rosa-txt)}
 .today-head h1{font-size:30px;line-height:1.15;margin-top:2px}
 .today-head .meta{color:var(--ink-2);font-size:14px;margin-top:6px}
 .cta{display:flex;align-items:center;justify-content:center;gap:10px;margin:18px auto 0;width:calc(100% - 40px);height:58px;border-radius:29px;
@@ -90,7 +93,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .ghost-link{display:block;margin:12px auto 0;color:var(--cenidor);font-weight:600;font-size:14.5px}
 @media (prefers-color-scheme:dark){.ghost-link{color:var(--oro)}}
 .practica{margin:26px 20px 0;padding:18px 18px 18px 20px;border-radius:22px;background:var(--oro-2);position:relative}
-.practica h3{font-size:19px;color:#8A6411}
+.practica h3,.practica .h3{font-size:19px;color:#8A6411}
 @media (prefers-color-scheme:dark){.practica h3{color:var(--oro)}}
 .practica p{font-family:var(--read);font-size:16.5px;line-height:1.6;margin:6px 0 0}
 .row-card{display:flex;align-items:center;gap:14px;margin:12px 20px 0;padding:14px 16px;border-radius:20px;background:var(--surface);width:calc(100% - 40px);text-align:left}
@@ -112,7 +115,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .tl{display:grid;grid-template-columns:34px 64px 1fr auto;align-items:center;gap:12px;padding:10px 0;width:100%;text-align:left;position:relative}
 .tl .num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:16px;background:var(--surface);border:2px solid var(--line);position:relative;z-index:1}
 .tl.done .num{background:var(--oro);border-color:var(--oro);color:var(--noche)}
-.tl.next .num{border-color:var(--rosa);color:var(--rosa)}
+.tl.next .num{border-color:var(--rosa);color:var(--rosa-txt)}
 .tl:not(:last-child)::before{content:"";position:absolute;left:16px;top:44px;bottom:-14px;width:2px;background:var(--line)}
 .tl.done:not(:last-child)::before{background:var(--oro)}
 .tl img{width:64px;height:64px;border-radius:16px;object-fit:cover}
@@ -141,7 +144,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .int{display:flex;gap:12px;align-items:flex-start;margin:10px 20px 0;padding:14px 14px 14px 16px;border-radius:20px;background:var(--surface);position:relative;overflow:hidden}
 .int::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--rosa)}
 .int.ok::before{background:var(--oro)}
-.int .tx{flex:1;font-family:var(--read);font-size:16.5px;line-height:1.5;white-space:pre-wrap}
+.int .tx{flex:1;overflow-wrap:anywhere;min-width:0;font-family:var(--read);font-size:16.5px;line-height:1.5;white-space:pre-wrap}
 .int .when{font-family:var(--ui);font-size:12.5px;color:var(--ink-2);margin-top:4px}
 .int.ok .tx{color:var(--ink-2)}
 .int .acts{display:flex;flex-direction:column;gap:6px}
@@ -203,7 +206,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .player.cover .lyrics{display:none}
 .lyrics{flex:1;overflow-y:auto;padding:18vh 24px 22vh;scrollbar-width:none;mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 80%,transparent 100%);-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 80%,transparent 100%)}
 .lyrics::-webkit-scrollbar{display:none}
-.ly{font-family:var(--read);font-size:21px;line-height:1.55;margin:0 0 22px;opacity:.32;transition:opacity .45s,transform .45s var(--ease);transform-origin:left center;cursor:pointer}
+.ly{overflow-wrap:anywhere;font-family:var(--read);font-size:21px;line-height:1.55;margin:0 0 22px;opacity:.32;transition:opacity .45s,transform .45s var(--ease);transform-origin:left center;cursor:pointer}
 .ly.verse{white-space:pre-line;font-size:23px;line-height:1.4}
 .ly.now{opacity:1;transform:scale(1.02)}
 .ly.head{font-family:var(--display);font-size:15px;opacity:.75;color:var(--oro);margin:34px 0 10px;cursor:default;transform:none}
@@ -272,7 +275,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .picks{display:flex;flex-direction:column;gap:8px;margin-top:8px}
 .pick{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;background:var(--bg);cursor:pointer}
 .pick input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--rosa);flex:none}
-.pick .pt{display:block;font-family:var(--read);font-size:16px;line-height:1.45}
+.pick .pt{overflow-wrap:anywhere;display:block;font-family:var(--read);font-size:16px;line-height:1.45}
 .pick .ps{display:block;font-size:12.5px;color:#8A6411;margin-top:2px}
 .date-in{margin-top:6px;width:100%;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;background:var(--bg);color:var(--ink)}
 
@@ -298,7 +301,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .ly-pause .skip,.ly-int .cd button{margin-left:10px;padding:6px 12px;border-radius:12px;background:rgba(255,255,255,.16);font-weight:600;font-size:13px;color:#fff}
 .btn-p.ghost{background:transparent;color:var(--ink-2);margin-top:6px}
 .hist-row{display:flex;gap:14px;margin:0 20px;padding:12px 0;border-bottom:1px solid var(--line)}
-.hist-row b{font-family:var(--display);font-size:18px;font-weight:400;color:var(--rosa);min-width:30px}
+.hist-row b{font-family:var(--display);font-size:18px;font-weight:400;color:var(--rosa-txt);min-width:30px}
 .hist-row .hd{display:block;font-size:13px;color:var(--ink-2)}
 .hist-row .hi{display:block;font-family:var(--read);font-size:15.5px}
 .hist-row .hi.ok{color:#8A6411}.hist-row .muted{color:var(--ink-2);font-style:italic}
@@ -328,6 +331,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .qr{display:flex;justify-content:center;margin-top:16px}
 .qr canvas,.qr img{width:180px;height:180px;border-radius:14px;background:#fff;padding:10px}
 .linkbox{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--bg);font-size:14px;word-break:break-all;color:var(--ink-2)}
+.boot{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:var(--display);font-size:22px;color:var(--ink-2)}.boot img{border-radius:18px}
 .toast{position:absolute;left:50%;top:calc(var(--safe-t) + 14px);z-index:60;transform:translate(-50%,-140%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:16px;font-size:14px;font-weight:500;transition:transform .35s var(--ease);max-width:88%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .toast.on{transform:translate(-50%,0)}
 .hidden{display:none!important}
@@ -337,7 +341,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 <body>
 <div class="stage">
 <div class="app" id="app">
-  <main class="screen" id="screen" tabindex="-1"></main>
+  <main class="screen" id="screen" tabindex="-1"><div class="boot"><img src="icons/icon-192.png" alt="" width="72" height="72"><div>Hub de Fe</div></div></main>
 
   <button class="mini off" id="mini" aria-label="Abrir reproductor">
     <img id="miniImg" alt="">
@@ -376,7 +380,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
   </section>
 
   <div class="scrim" id="scrim"></div>
-  <div class="bsheet" id="sheet" role="dialog" aria-modal="true"></div>
+  <div class="bsheet" id="sheet" role="dialog" aria-modal="true" aria-label="Panel"></div>
   <div class="toast" id="toast" role="status"></div>
 </div>
 </div>
@@ -414,7 +418,7 @@ const hora12=h=>{const[a,b]=h.split(":").map(Number);return ((a%12)||12)+":"+Str
 const mmss=s=>Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
 const uid=()=>Math.random().toString(36).slice(2,9);
 const hoyStr=()=>ymd(new Date());
-function toast(m,ms=2600){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),ms)}
+function toast(m,ms=2600,prio=false){if(!prio&&toast.until>Date.now())return;if(prio)toast.until=Date.now()+ms;const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),ms)}
 function saludo(){const h=new Date().getHours();return h<12?"Buenos días":h<19?"Buenas tardes":"Buenas noches"}
 const U=dev=>({novena:"Novena",coronilla:"Coronilla",diaria:"Oración"})[dev.type]||"Rezo";
 const u=dev=>U(dev).toLowerCase();
@@ -424,12 +428,18 @@ const Store={db:null,uid:null,cache:{},
   async init(){try{const db=await claude.use("db"),us=await claude.use("user");if(db&&us){const id=await us.id();if(id){this.uid=id;this.db=db}}}catch(e){}},
   lk:id=>"hubdefe:"+id,
   async get(id){
+    if(!this.db){ // sin base de datos: leer siempre lo último guardado (otra pestaña pudo cambiarlo)
+      let v=null;try{v=JSON.parse(localStorage.getItem(this.lk(id))||"null")}catch(e){}
+      if(v&&typeof v==="object"){this.cache[id]=v;return v}
+      return this.cache[id]||(this.cache[id]={});
+    }
     if(this.cache[id])return this.cache[id];
     let v=null;
     if(this.db){try{const s=await this.db.collection("data/users/"+this.uid).doc(id).get();if(s&&s.exists)v=JSON.parse(JSON.stringify(s.data()))}catch(e){}}
     if(!v){try{v=JSON.parse(localStorage.getItem(this.lk(id))||"null")}catch(e){}}
     v=v||{};this.cache[id]=v;return v},
-  async set(id,v){this.cache[id]=v;try{localStorage.setItem(this.lk(id),JSON.stringify(v))}catch(e){}
+  async set(id,v){this.cache[id]=v;let okLocal=true;try{localStorage.setItem(this.lk(id),JSON.stringify(v))}catch(e){okLocal=false}
+    if(!okLocal&&!this.db&&!this.warned){this.warned=true;toast("No se pudo guardar en este teléfono: la memoria del navegador está llena o bloqueada",6000,true)}
     if(this.db){try{await this.db.collection("data/users/"+this.uid).doc(id).set(JSON.parse(JSON.stringify(v)))}catch(e){console.warn(e)}}}
 };
 /* doc <idDevoción> = {hora, horas?, hoy?, avisos?, ciclos:[{n,start,done[],fin,creados[],creadosKey,intenciones:[{id,texto,fecha,recibida,desde?}]}]} */
@@ -439,6 +449,8 @@ function proximoFijo(mmdd){ // próxima fecha fija (p. ej. 16 de diciembre), o l
   if(diffDays(s,t)>8)s=new Date(t.getFullYear()+1,m-1,d);return ymd(s)}
 async function devState(id){
   const dev=await loadDev(id);const st=await Store.get(id);
+  if(Array.isArray(st.ciclos))st.ciclos=st.ciclos.filter(c=>c&&typeof c.n==="number").map(c=>Object.assign(mkCiclo(c.n,c.start||null),c,{done:Array.isArray(c.done)?c.done:[],intenciones:Array.isArray(c.intenciones)?c.intenciones.filter(x=>x&&typeof x.texto==="string"):[],creados:Array.isArray(c.creados)?c.creados:[]}));
+  if(Array.isArray(st.ciclos)&&!st.ciclos.length)delete st.ciclos;
   if(!Array.isArray(st.ciclos)){
     let c;
     if(id==="divino-nino"){ // migración desde versiones anteriores
@@ -456,13 +468,16 @@ async function devState(id){
   return st;
 }
 const cur=st=>st.ciclos[st.ciclos.length-1];
+window.addEventListener("storage",e=>{if(e.key&&e.key.startsWith("hubdefe:")&&!parseHash().day){Store.cache={};onRoute()}});
 const activas=c=>c.intenciones.filter(x=>!x.recibida);
 let caps={};
 
 /* ================= Datos ================= */
 let CATALOG=null;const DEVS={};
-const loadCatalog=async()=>CATALOG||(CATALOG=await (await fetch("catalog.json")).json());
-const loadDev=async id=>DEVS[id]||(DEVS[id]=await (await fetch("devociones/"+id+"/data.json")).json());
+let CATP=null;const DEVP={};
+const loadCatalog=async()=>CATALOG||(CATALOG=await (CATP||(CATP=fetch("catalog.json").then(r=>{if(!r.ok)throw new Error("catalog");return r.json()}))));
+const loadDev=async id=>DEVS[id]||(DEVS[id]=await (DEVP[id]||(DEVP[id]=fetch("devociones/"+id+"/data.json").then(r=>{if(!r.ok)throw new Error("dev");return r.json()}))));
+loadCatalog().then(c=>c.devociones.forEach(k=>loadDev(k.id))).catch(()=>{}); // todo en paralelo desde el arranque
 const byType=async t=>(await loadCatalog()).devociones.filter(k=>k.type===t);
 function estado(dev,c){
   const total=dev.days.length,done=new Set(c.done),sig=dev.days.find(d=>!done.has(d.n));
@@ -497,6 +512,9 @@ function parseHash(){const h=location.hash.slice(1);const m=h.match(/^(.+)-dia-(
   if(m)return{dev:m[1],day:+m[2]};if(["hoy","devociones","intenciones","ajustes"].includes(h))return{tab:h};if(h&&h!=="inicio")return{nov:h};return{tab:"hoy"}}
 async function onRoute(){
   const r=parseHash();
+  const cat=await loadCatalog();const valid=id=>cat.devociones.some(k=>k.id===id);
+  if((r.day&&(!valid(r.dev)||r.day<1||r.day>cat.devociones.find(k=>k.id===r.dev).days))||(r.nov&&!valid(r.nov))){
+    toast("Ese enlace no corresponde a ninguna oración. Te llevo al inicio.");history.replaceState(null,"","#hoy");return onRoute()}
   if(r.day){await openPlayer(r.dev,r.day);return}
   closePlayer(false);
   if(r.nov){await renderDev(r.nov);setTabs("devociones");return}
@@ -552,7 +570,7 @@ async function renderHoy(){
     ${otra}
     <div class="section">Tu día de oración</div>
     <div class="dayrows">${await filasDelDia()}</div>
-    ${!e.completa&&pr?`<div class="practica"><h3>Práctica del día</h3><p>${esc(pr.paras[0].text)}</p></div>`:""}
+    ${!e.completa&&pr?`<div class="practica"><h2 class="h3">Práctica del día</h2><p>${esc(pr.paras[0].text)}</p></div>`:""}
   `);
   Lit.clear();badge();
 }
@@ -763,12 +781,14 @@ async function crearDiarios(id){
   }catch(e){toast((ERR[e&&e.code]||"No se pudo crear. Revisa tu calendario antes de intentarlo otra vez.")+(ok?` Se crearon ${ok}.`:""),6000)}
   renderAjustes();
 }
+function foldIcs(line){const enc=new TextEncoder();if(enc.encode(line).length<=75)return line;
+  const out=[];let cur="",n=0,lim=75;for(const ch of line){const b=enc.encode(ch).length;if(n+b>lim){out.push(cur);cur=" "+ch;n=1+b;lim=75}else{cur+=ch;n+=b}}out.push(cur);return out.join("\r\n")}
 function icsText(evs,{rrule=false,alarms=[0,15]}={}){
   const q=s=>s.replace(/\\/g,"\\\\").replace(/\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");
   const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Hub de Fe//ES","CALSCALE:GREGORIAN"];
   evs.forEach((ev,i)=>{L.push("BEGIN:VEVENT","UID:"+uid()+i+"@hubdefe","DTSTAMP:"+fmt(new Date()),"DTSTART:"+fmt(ev.ini),"DTEND:"+fmt(ev.fin),"SUMMARY:"+q(ev.titulo),"DESCRIPTION:"+q(ev.desc));
     if(rrule)L.push("RRULE:FREQ=DAILY");alarms.forEach(a=>L.push("BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+q(ev.titulo),"TRIGGER:"+(a?"-PT"+a+"M":"PT0M"),"END:VALARM"));L.push("END:VEVENT")});
-  L.push("END:VCALENDAR");return L.join("\r\n");
+  L.push("END:VCALENDAR");return L.map(foldIcs).join("\r\n");
 }
 async function descargarIcs(id){const dev=await loadDev(id),st=await devState(id),c=cur(st);
   try{await guardarArchivo(`${id}-${c.n}.ics`,icsText(dev.days.map(d=>eventoDia(dev,d,c,st.hora))));toast("Abre el archivo para añadir los 9 avisos")}catch(e){toast("Descarga cancelada")}}
@@ -776,7 +796,7 @@ async function icsDiario(id){const dev=await loadDev(id),st=await devState(id);
   try{await guardarArchivo(`${id}-diario.ics`,icsText(eventosDiarios(dev,st),{rrule:true,alarms:[0]}));toast("Abre el archivo para añadir los avisos diarios")}catch(e){toast("Descarga cancelada")}}
 
 /* ================= Hoja inferior ================= */
-function openSheet(html){$("#sheet").innerHTML='<button class="grab" aria-label="Cerrar" onclick="closeSheet()"></button><button class="sheet-x" aria-label="Cerrar" onclick="closeSheet()">×</button>'+html;$("#scrim").classList.add("on");$("#sheet").classList.add("on")}
+function openSheet(html){setTimeout(()=>{const h=$("#sheet h3");$("#sheet").setAttribute("aria-label",h?h.textContent:"Panel")},0);$("#sheet").innerHTML='<button class="grab" aria-label="Cerrar" onclick="closeSheet()"></button><button class="sheet-x" aria-label="Cerrar" onclick="closeSheet()">×</button>'+html;$("#scrim").classList.add("on");$("#sheet").classList.add("on")}
 function closeSheet(){$("#scrim").classList.remove("on");$("#sheet").classList.remove("on")}
 $("#scrim").onclick=closeSheet;document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
 
@@ -832,12 +852,18 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
   async run(){const tk=++this.tk;
     while(this.playing&&tk===this.tk&&this.i<this.items.length){
       const it=this.items[this.i];this.focus();this.ui();
-      try{it.kind==="audio"?await this.audio(it.src,tk):await this.pausa(it,tk)}catch(e){if(tk!==this.tk)return}
+      try{it.kind==="audio"?await this.audio(it.src,tk):await this.pausa(it,tk)}
+      catch(e){if(tk!==this.tk)return;
+        if(e&&e.message==="audio"){ // reintentar una vez; si falla, detener sin avanzar
+          try{await new Promise(r=>setTimeout(r,800));if(tk!==this.tk)return;await this.audio(it.src+"?r="+Date.now(),tk)}
+          catch(e2){if(tk!==this.tk)return;this.playing=false;this.ui();
+            toast(navigator.onLine?"No se pudo cargar el audio. Toca reproducir para intentarlo otra vez.":"Sin conexión: este audio aún no está guardado en el teléfono. Conéctate a internet para escucharlo.",6000,true);return}
+        }else if(!this.playing)return}
       if(tk!==this.tk)return;this.i++}
-    if(tk===this.tk&&this.i>=this.items.length){this.playing=false;this.i=this.items.length;this.ui();finRezo()}
+    if(tk===this.tk&&this.playing&&this.i>=this.items.length){this.playing=false;this.i=this.items.length;this.ui();finRezo()}
   },
   audio(src,tk){return new Promise((res,rej)=>{
-    if(!aud.src.endsWith(src))aud.src=src;else aud.currentTime=0;aud.playbackRate=this.rates[this.ri];
+    if(!aud.src.endsWith(src)){aud.src=src}else{try{aud.currentTime=0}catch(e){}}aud.playbackRate=this.rates[this.ri];
     const done=()=>{cl();res()},fail=()=>{cl();rej(new Error("audio"))};
     const cl=()=>{aud.removeEventListener("ended",done);aud.removeEventListener("error",fail);clearInterval(w)};
     const w=setInterval(()=>{if(tk!==this.tk){cl();res()}},250);
@@ -925,7 +951,7 @@ async function finRezo(){
     const pr=dev.days.find(d=>d.n===n).blocks.find(b=>b.kind==="practica");
     html=`${custodia(dev,e,{size:200})}<h2>${e.completa?`¡Novena #${c.n} completada!`:esc(P.meta.label)+" rezado"}</h2>
       <p>${e.completa?"Los nueve rayos están encendidos. Gracias, Señor.":`Se encendió un rayo más. Te quedan ${e.total-e.done.size} ${e.total-e.done.size===1?"día":"días"}.`}</p>
-      ${e.completa?`<button class="btn-w" onclick="closePlayer(false);sheetNuevoCiclo('${id}')">Empezar una nueva novena</button><button class="btn-o" onclick="closePlayer(true)">Ahora no</button>`:`<button class="btn-w" onclick="closePlayer(true)">Volver al inicio</button>`}
+      ${e.completa?`<button class="btn-w" onclick="closePlayer(true);setTimeout(()=>sheetNuevoCiclo('${id}'),350)">Empezar una nueva novena</button><button class="btn-o" onclick="closePlayer(true)">Ahora no</button>`:`<button class="btn-w" onclick="closePlayer(true)">Volver al inicio</button>`}
       ${pr&&!e.completa?`<p style="margin-top:22px;font-family:var(--read);font-style:italic;font-size:15px">Práctica: ${esc(pr.paras[0].text)}</p>`:""}`;
   }else if(type==="coronilla"){
     c.done=[1];c.fin=hoyStr();await Store.set(id,st);
@@ -940,7 +966,11 @@ async function finRezo(){
 }
 
 /* Voz de las intenciones (texto del usuario) */
-async function speakEs(text,tk,rate){
+async function speakEs(text,tk,rate){ // nunca espera más de lo razonable, aunque la voz del teléfono no responda
+  const limite=new Promise(r=>setTimeout(r,Math.max(5000,text.length*110/rate)));
+  return Promise.race([speakEs0(text,tk,rate),limite]);
+}
+async function speakEs0(text,tk,rate){
   if(caps.tts){try{await caps.tts.speak(text,{voice:"airy",rate:Math.max(.7,Math.min(1.5,rate*.95))});return}catch(e){if(tk!==P.tk)return}}
   if("speechSynthesis" in window){await new Promise(res=>{const ut=new SpeechSynthesisUtterance(text);ut.lang="es-ES";ut.rate=.95*rate;
     const vs=speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang));ut.voice=vs.find(v=>/natural|neural|premium|enhanced|paulina|m[oó]nica|helena|google/i.test(v.name))||vs[0]||null;
@@ -949,7 +979,7 @@ async function speakEs(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.17-6c59d9";
+const APP_VERSION="2026.11.17-59a593";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
