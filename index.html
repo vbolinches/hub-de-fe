@@ -209,6 +209,10 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .ly{overflow-wrap:anywhere;font-family:var(--read);font-size:21px;line-height:1.55;margin:0 0 22px;opacity:.32;transition:opacity .45s,transform .45s var(--ease);transform-origin:left center;cursor:pointer}
 .ly.verse{white-space:pre-line;font-size:23px;line-height:1.4}
 .ly.now{opacity:1;transform:scale(1.02)}
+.ly .w{cursor:pointer;border-radius:5px;padding:0 2px;margin:0 -2px;transition:background-color .1s linear}
+@media (hover:hover){.ly .w:hover{background:rgba(255,255,255,.12)}}
+.ly.now .w.cur{background:rgba(232,182,76,.45);color:#fff}
+@media (prefers-reduced-motion:reduce){.ly .w{transition:none}}
 .ly.head{font-family:var(--display);font-size:15px;opacity:.75;color:var(--oro);margin:34px 0 10px;cursor:default;transform:none}
 .ly.head:first-child{margin-top:0}
 .ly-int{margin:0 0 22px;padding:16px;border-radius:20px;background:rgba(229,120,155,.18);border:1px solid rgba(229,120,155,.45);opacity:.4;transition:opacity .4s}
@@ -827,15 +831,16 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
       if(b.title)html+=`<div class="ly head">${esc(b.kind==="lectura"&&dev.type==="novena"&&dev.id==="divino-nino"?day.label+": "+b.title:b.title)}</div>`;
       if(b.intro)this.items.push({kind:"audio",src:b.intro.audio,dur:b.intro.dur||3,title:secTitle,el:null});
       b.paras.forEach(pp=>{const idx=this.items.length,rep=pp.rep||1;
-        html+=`<p class="ly ${b.verse?"verse":""}" id="ly${idx}" data-i="${idx}">${esc(pp.text)}${rep>1?`<span class="beads" id="bd${idx}">${Array.from({length:rep},()=>"<i></i>").join("")}</span>`:""}</p>`;
-        for(let r=0;r<rep;r++)this.items.push({kind:"audio",src:pp.audio,dur:pp.dur||5,title:secTitle,el:"ly"+idx,bead:rep>1?{id:"bd"+idx,k:r}:null});
+        const tt=pp.t||[];let wk=0;const words=pp.text.split(/(\s+)/).map(part=>/^\s+$/.test(part)||!part?esc(part):`<span class="w" data-k="${wk}" data-t="${tt[wk++]??-1}">${esc(part)}</span>`).join("");
+        html+=`<p class="ly ${b.verse?"verse":""}" id="ly${idx}" data-i="${idx}">${words}${rep>1?`<span class="beads" id="bd${idx}">${Array.from({length:rep},()=>"<i></i>").join("")}</span>`:""}</p>`;
+        for(let r=0;r<rep;r++)this.items.push({kind:"audio",src:pp.audio,dur:pp.dur||5,title:secTitle,el:"ly"+idx,words:!!pp.t,bead:rep>1?{id:"bd"+idx,k:r}:null});
         if(pp.pause){const pi=this.items.length;html+=`<div class="ly-pause" id="ly${pi}" data-i="${pi}"><span id="cd${pi}">Silencio</span></div>`;this.items.push({kind:"pausa",title:secTitle,texts:[],secs:pp.pause,cd:"cd"+pi,el:"ly"+pi,dur:pp.pause})}
       });
     });
     let acc=0;this.elapsedBefore=this.items.map(it=>{const a=acc;acc+=it.dur;return a});this.total=acc;
     this.meta={id,n,cn:c.n,type:dev.type,dev:dev.title,label:day.label,title:day.title,img:day.img};
     $("#lyrics").innerHTML=html;
-    $("#lyrics").querySelectorAll("[data-i]").forEach(el=>el.onclick=()=>this.jump(+el.dataset.i));
+    $("#lyrics").querySelectorAll("[data-i]").forEach(el=>el.onclick=ev=>this.tapText(el,ev));
     $("#chips").innerHTML=this.sections.map((s,k)=>`<button class="chip" data-k="${k}">${esc(s.label)}</button>`).join("");
     $("#chips").querySelectorAll(".chip").forEach(ch=>ch.onclick=()=>this.jump(this.sections[+ch.dataset.k].start));
     $("#pImg").src=day.img;$("#pBg").style.backgroundImage=`url(${day.img})`;
@@ -845,10 +850,23 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
     if(P.big){const s=[21,24,27][P.big];document.querySelectorAll(".ly:not(.head)").forEach(e=>e.style.fontSize=(e.classList.contains("verse")?s+2:s)+"px")}
     this.i=0;this.ui();this.media();
   },
-  stop(){this.tk++;this.playing=false;aud.pause();clearInterval(this.cd);try{caps.tts&&caps.tts.stop()}catch(e){}try{speechSynthesis.cancel()}catch(e){}this.ui()},
+  stop(){this.tk++;this.playing=false;cancelAnimationFrame(this.raf);aud.pause();clearInterval(this.cd);try{caps.tts&&caps.tts.stop()}catch(e){}try{speechSynthesis.cancel()}catch(e){}this.ui()},
   toggle(){this.playing?this.stop():this.play()},
-  play(){if(!this.items.length)return;if(this.i>=this.items.length)this.i=0;this.playing=true;$("#doneView").classList.remove("on");this.ui();this.run()},
-  jump(i){this.stop();this.i=Math.max(0,Math.min(i,this.items.length-1));this.play()},
+  play(){if(!this.items.length)return;if(this.i>=this.items.length)this.i=0;this.playing=true;$("#doneView").classList.remove("on");this.ui();this.run();this.karaoke();
+    try{if(!localStorage.getItem("hubdefe:tipWords")){localStorage.setItem("hubdefe:tipWords","1");setTimeout(()=>toast("Toca cualquier palabra para escuchar desde ahí",4500),1500)}}catch(e){}},
+  jump(i,ms=0){this.stop();this.i=Math.max(0,Math.min(i,this.items.length-1));this.seekMs=ms>0?ms:0;this.play()},
+  tapText(el,ev){ // toque en una palabra, o en el inicio de un texto seleccionado
+    let w=ev.target.closest&&ev.target.closest(".w");
+    const sel=getSelection&&getSelection();
+    if(sel&&!sel.isCollapsed&&el.contains(sel.anchorNode)){const r=sel.getRangeAt(0);const n=r.startContainer.nodeType===1?r.startContainer:r.startContainer.parentElement;
+      w=(n.closest&&n.closest(".w"))||[...el.querySelectorAll(".w")].find(x=>r.intersectsNode(x))||w}
+    const first=+el.dataset.i;let target=first;
+    const cur=this.items[this.i];if(cur&&cur.el===el.id&&cur.bead)target=this.i; // en una repetición, quedarse en la cuenta actual
+    const ms=w?Math.max(0,+w.dataset.t-60):0;
+    if(w&&+w.dataset.t<0){const prev=[...el.querySelectorAll(".w")].slice(0,+w.dataset.k).reverse().find(x=>+x.dataset.t>=0);this.jump(target,prev?+prev.dataset.t:0)}
+    else this.jump(target,ms);
+    if(sel&&!sel.isCollapsed)setTimeout(()=>sel.removeAllRanges(),50);
+  },
   async run(){const tk=++this.tk;
     while(this.playing&&tk===this.tk&&this.i<this.items.length){
       const it=this.items[this.i];this.focus();this.ui();
@@ -863,7 +881,11 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
     if(tk===this.tk&&this.playing&&this.i>=this.items.length){this.playing=false;this.i=this.items.length;this.ui();finRezo()}
   },
   audio(src,tk){return new Promise((res,rej)=>{
-    if(!aud.src.endsWith(src)){aud.src=src}else{try{aud.currentTime=0}catch(e){}}aud.playbackRate=this.rates[this.ri];
+    const seek=(this.seekMs||0)/1000;this.seekMs=0;
+    if(!aud.src.endsWith(src)){aud.src=src}
+    const setT=()=>{try{aud.currentTime=seek}catch(e){}};
+    if(aud.readyState>=1)setT();else if(seek>0)aud.addEventListener("loadedmetadata",setT,{once:true});else setT();
+    aud.playbackRate=this.rates[this.ri];
     const done=()=>{cl();res()},fail=()=>{cl();rej(new Error("audio"))};
     const cl=()=>{aud.removeEventListener("ended",done);aud.removeEventListener("error",fail);clearInterval(w)};
     const w=setInterval(()=>{if(tk!==this.tk){cl();res()}},250);
@@ -877,6 +899,20 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
       const draw=()=>{cd.innerHTML=`Silencio: <strong>${s}</strong> s <button class="skip" id="skipP">Continuar</button>`;const b=$("#skipP");if(b)b.onclick=ev=>{ev.stopPropagation();clearInterval(this.cd);res()}};
       draw();this.cd=setInterval(()=>{if(tk!==this.tk){clearInterval(this.cd);return res()}s--;if(s<=0){clearInterval(this.cd);return res()}draw()},1000)});
     cd.textContent=it.texts.length||it.title==="Intenciones"?"Un momento de silencio para tus peticiones":"Silencio"},
+  karaoke(){ // bucle ligero mientras suena: marca la palabra actual
+    cancelAnimationFrame(this.raf);
+    const step=()=>{const it=this.items[this.i];
+      if(this.playing&&it&&it.kind==="audio"&&it.words){const el=document.getElementById(it.el);
+        if(el){const ms=aud.currentTime*1000;const ws=el.querySelectorAll(".w");let k=-1;
+          for(let j=0;j<ws.length;j++){const t=+ws[j].dataset.t;if(t>=0&&t<=ms+40)k=j;else if(t>ms+40)break}
+          if(k!==this.wk||el!==this.wel){if(this.wcur)this.wcur.classList.remove("cur");this.wcur=k>=0?ws[k]:null;if(this.wcur)this.wcur.classList.add("cur");this.wk=k;this.wel=el}}}
+      else if(this.wcur){this.wcur.classList.remove("cur");this.wcur=null;this.wk=-1}
+      const now=performance.now();if(this.playing&&it&&it.kind==="audio"&&now-(this.lastT||0)>250){this.lastT=now;
+        const e=(this.elapsedBefore[this.i]||0)+Math.min(aud.currentTime||0,it.dur),pct=this.total?e/this.total*100:0;
+        $("#tA").textContent=mmss(e);$("#tB").textContent="-"+mmss(Math.max(0,this.total-e));$("#pBar").style.width=pct+"%";$("#miniProg").style.width=pct+"%"}
+      if(this.playing)this.raf=requestAnimationFrame(step)};
+    this.raf=requestAnimationFrame(step);
+  },
   focus(){
     document.querySelectorAll("#lyrics .now").forEach(e=>e.classList.remove("now"));
     const it=this.items[this.i];let el=null;
@@ -889,7 +925,7 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
     const pi=this.playing?I.pause:I.play;$("#pPlay").innerHTML=pi;$("#miniPP").innerHTML=pi;
     $("#pPlay").setAttribute("aria-label",this.playing?"Pausar":"Reproducir");
     const it=this.items[Math.min(this.i,this.items.length-1)];
-    const el=this.i<this.items.length?(this.elapsedBefore[this.i]||0):this.total;const pct=this.total?el/this.total*100:0;
+    const el=this.i<this.items.length?(this.elapsedBefore[this.i]||0)+(this.playing&&it&&it.kind==="audio"?Math.min(aud.currentTime||0,it.dur):0):this.total;const pct=this.total?el/this.total*100:0;
     $("#pBar").style.width=pct+"%";$("#miniProg").style.width=pct+"%";
     $("#tA").textContent=mmss(el);$("#tB").textContent="-"+mmss(Math.max(0,this.total-el));
     $("#pSec").textContent=it?(it.bead?`${it.title} · ${it.bead.k+1} de ${document.querySelectorAll("#"+it.bead.id+" i").length}`:it.title):"";
@@ -979,7 +1015,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.17-59a593";
+const APP_VERSION="2026.11.17-29b98e";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
