@@ -1,0 +1,58 @@
+{
+ "devociones": [
+  {
+   "id": "divino-nino",
+   "type": "novena",
+   "title": "Novena Bíblica al Divino Niño Jesús",
+   "short": "Divino Niño",
+   "subtitle": "Nueve días con el Niño Jesús del 20 de Julio",
+   "cover": "img/portada.jpg",
+   "days": 9
+  },
+  {
+   "id": "aguinaldos",
+   "type": "novena",
+   "title": "Novena de Aguinaldos",
+   "short": "Aguinaldos",
+   "subtitle": "Del 16 al 24 de diciembre, preparando la Navidad",
+   "cover": "img/aguinaldos.jpg",
+   "days": 9
+  },
+  {
+   "id": "sangre",
+   "type": "novena",
+   "title": "Novena a la Sangre de Cristo",
+   "short": "Sangre de Cristo",
+   "subtitle": "Nueve días bajo la protección de la preciosa Sangre de Jesús",
+   "cover": "img/sangre.jpg",
+   "days": 9
+  },
+  {
+   "id": "nudos",
+   "type": "novena",
+   "title": "Novena a la Virgen que Desata los Nudos",
+   "short": "Desatanudos",
+   "subtitle": "María, la que desata los nudos de nuestra vida",
+   "cover": "img/nudos.jpg",
+   "days": 9
+  },
+  {
+   "id": "coronilla",
+   "type": "coronilla",
+   "title": "Coronilla de la Divina Misericordia",
+   "short": "Coronilla",
+   "subtitle": "Cinco decenas por la misericordia de Dios. Tradicionalmente, a las 3 de la tarde",
+   "cover": "img/coronilla.jpg",
+   "days": 1
+  },
+  {
+   "id": "diarias",
+   "type": "diaria",
+   "title": "Oraciones de cada día",
+   "short": "Cada día",
+   "subtitle": "Mañana, Ángelus y noche",
+   "cover": "img/diarias.jpg",
+   "days": 3
+  }
+ ]
+}

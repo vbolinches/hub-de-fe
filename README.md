@@ -1,0 +1,14 @@
+# Hub de Fe
+
+Novenas, coronilla y oraciones de cada día con voz guiada, intenciones por rezo y recordatorios.
+App web instalable (PWA): **https://vbolinches.github.io/hub-de-fe/**
+
+- Novena Bíblica al Divino Niño Jesús
+- Novena de Aguinaldos (texto tradicional de Fray Fernando de Jesús Larrea y la Madre María Ignacia)
+- Novena a la Sangre de Cristo
+- Novena a la Virgen que Desata los Nudos
+- Coronilla de la Divina Misericordia
+- Oraciones de cada día (mañana, Ángelus y noche)
+
+Voz: Salomé (español de Colombia), neural. Ilustraciones originales.
+Para publicar una nueva versión: regenerar con `build.py` y `pwa.py` y subir los cambios a `main`; la app avisa a cada usuario de que hay una actualización.

@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F2456">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Hub de Fe</title>
+<meta name="description" content="Novenas, coronilla y oraciones de cada día con voz guiada, tus intenciones y recordatorios.">
+<meta property="og:title" content="Hub de Fe">
+<meta property="og:description" content="Reza novenas, la coronilla y las oraciones de cada día con voz guiada.">
+<meta property="og:image" content="https://vbolinches.github.io/hub-de-fe/icons/icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-title" content="Hub de Fe">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --noche:#1F2456; --noche-2:#2C3270; --cenidor:#3D5BB0; --rosa:#E5789B; --rosa-2:#F7D3DF; --oro:#E8B64C; --oro-2:#F8E6BC;
+  --bg:#F2F0FA; --surface:#FFFFFF; --surface-2:#E9E6F5; --ink:#221B3A; --ink-2:#5E5878; --line:#DCD7EC;
+  --display:"Marcellus",Georgia,serif; --read:"Lora",Georgia,serif; --ui:"Figtree",system-ui,sans-serif;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --tabh:64px; --ease:cubic-bezier(.2,.8,.2,1);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#13152E; --surface:#1D2044; --surface-2:#272B57; --ink:#F1EEFA; --ink-2:#A8A3C4; --line:#2F3463; --rosa-2:#4A2A44; --oro-2:#4A3B1C;}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:var(--ui);color:var(--ink);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(1200px 700px at 20% 0%,#3A3F8F 0%,transparent 60%),radial-gradient(900px 600px at 100% 100%,#5B2E57 0%,transparent 55%),var(--noche);}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--oro);outline-offset:2px}
+h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px}
+
+/* ---------- Marco de app ---------- */
+.stage{min-height:100%;display:flex;align-items:center;justify-content:center;padding:28px}
+.app{position:relative;width:100%;max-width:420px;height:min(880px,calc(100dvh - 56px));background:var(--bg);border-radius:38px;overflow:hidden;
+  box-shadow:0 0 0 10px #0E1030,0 0 0 11px #3B3F7A,0 40px 80px rgba(0,0,0,.45);display:flex;flex-direction:column}
+@media (max-width:520px){.stage{padding:0}.app{max-width:none;height:100dvh;border-radius:0;box-shadow:none}}
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:calc(var(--safe-t) + 8px) 0 calc(var(--tabh) + var(--safe-b) + 24px);scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.pad{padding:0 20px}
+.enter{animation:enter .35s var(--ease)}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- Tabs ---------- */
+.tabs{position:absolute;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);height:calc(var(--tabh) + var(--safe-b));padding-bottom:var(--safe-b);
+  background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:saturate(1.4) blur(18px);-webkit-backdrop-filter:saturate(1.4) blur(18px);border-top:1px solid var(--line)}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11.5px;font-weight:600;color:var(--ink-2);position:relative}
+.tab svg{width:24px;height:24px}
+.tab.on{color:var(--cenidor)}
+@media (prefers-color-scheme:dark){.tab.on{color:var(--oro)}}
+.tab.on::before{content:"";position:absolute;top:6px;width:44px;height:30px;border-radius:15px;background:color-mix(in srgb,var(--cenidor) 13%,transparent);z-index:-1}
+.badge{position:absolute;top:8px;left:calc(50% + 8px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--rosa);color:#fff;font-size:10.5px;display:grid;place-items:center}
+
+/* ---------- Encabezados ---------- */
+.greet{padding:14px 20px 4px}
+.greet .hello{font-family:var(--display);font-size:30px;line-height:1.1}
+.greet .date{color:var(--ink-2);font-size:14px;margin-top:2px}
+.screen-title{padding:18px 20px 10px;font-size:30px;font-family:var(--display)}
+.sub{color:var(--ink-2);font-size:14.5px}
+
+/* ---------- Custodia (progreso) ---------- */
+.custodia{position:relative;width:260px;height:260px;margin:6px auto 0}
+.custodia svg{position:absolute;inset:0;overflow:visible}
+.custodia .ray{transition:fill .6s}
+.custodia .face{position:absolute;left:50%;top:50%;width:132px;height:132px;transform:translate(-50%,-50%);border-radius:50%;overflow:hidden;
+  box-shadow:0 0 0 4px var(--oro),0 0 0 9px color-mix(in srgb,var(--oro) 30%,transparent),0 14px 40px rgba(31,36,86,.35)}
+.custodia .face img{width:100%;height:100%;object-fit:cover;object-position:50% 18%}
+.ray.today{animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.ray.lit{animation:lit .9s var(--ease)}
+@keyframes lit{0%{opacity:0}40%{opacity:1;filter:drop-shadow(0 0 8px var(--oro))}}
+
+/* ---------- Hoy ---------- */
+.today-head{text-align:center;padding:8px 24px 0}
+.today-head .day{font-size:14px;font-weight:600;color:var(--rosa)}
+.today-head h1{font-size:30px;line-height:1.15;margin-top:2px}
+.today-head .meta{color:var(--ink-2);font-size:14px;margin-top:6px}
+.cta{display:flex;align-items:center;justify-content:center;gap:10px;margin:18px auto 0;width:calc(100% - 40px);height:58px;border-radius:29px;
+  background:linear-gradient(135deg,var(--noche) 0%,var(--cenidor) 100%);color:#fff;font-weight:700;font-size:17px;box-shadow:0 10px 26px rgba(61,91,176,.38);transition:transform .12s}
+.cta:active{transform:scale(.97)}
+.cta .pl{width:34px;height:34px;border-radius:50%;background:var(--oro);display:grid;place-items:center;color:var(--noche)}
+.ghost-link{display:block;margin:12px auto 0;color:var(--cenidor);font-weight:600;font-size:14.5px}
+@media (prefers-color-scheme:dark){.ghost-link{color:var(--oro)}}
+.practica{margin:26px 20px 0;padding:18px 18px 18px 20px;border-radius:22px;background:var(--oro-2);position:relative}
+.practica h3{font-size:19px;color:#8A6411}
+@media (prefers-color-scheme:dark){.practica h3{color:var(--oro)}}
+.practica p{font-family:var(--read);font-size:16.5px;line-height:1.6;margin:6px 0 0}
+.row-card{display:flex;align-items:center;gap:14px;margin:12px 20px 0;padding:14px 16px;border-radius:20px;background:var(--surface);width:calc(100% - 40px);text-align:left}
+.row-card .ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;flex:none}
+.row-card .t{font-weight:600}
+.row-card .s{font-size:13.5px;color:var(--ink-2)}
+.row-card .chev{margin-left:auto;color:var(--ink-2)}
+.hint{margin:10px 20px 0;padding:12px 14px;border-radius:16px;background:var(--surface-2);font-size:14px;color:var(--ink-2)}
+
+/* ---------- Novena (línea de tiempo) ---------- */
+.nov-hero{position:relative;height:300px;margin-top:calc(-8px - var(--safe-t))}
+.nov-hero img{width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.nov-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(31,36,86,.15) 0%,rgba(31,36,86,0) 35%,rgba(31,36,86,.92) 100%)}
+.nov-hero .cap{position:absolute;left:20px;right:20px;bottom:18px;z-index:2;color:#fff}
+.nov-hero h1{font-size:31px;line-height:1.1}
+.nov-hero .s{opacity:.85;font-size:14.5px;margin-top:4px}
+.back-fab{position:absolute;top:calc(var(--safe-t) + 12px);left:14px;z-index:3;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.88);color:var(--noche);display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.timeline{position:relative;margin:18px 20px 0;padding-left:0}
+.tl{display:grid;grid-template-columns:34px 64px 1fr auto;align-items:center;gap:12px;padding:10px 0;width:100%;text-align:left;position:relative}
+.tl .num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:16px;background:var(--surface);border:2px solid var(--line);position:relative;z-index:1}
+.tl.done .num{background:var(--oro);border-color:var(--oro);color:var(--noche)}
+.tl.next .num{border-color:var(--rosa);color:var(--rosa)}
+.tl:not(:last-child)::before{content:"";position:absolute;left:16px;top:44px;bottom:-14px;width:2px;background:var(--line)}
+.tl.done:not(:last-child)::before{background:var(--oro)}
+.tl img{width:64px;height:64px;border-radius:16px;object-fit:cover}
+.tl .tt{font-family:var(--display);font-size:18px;line-height:1.15}
+.tl .dd{font-size:13px;color:var(--ink-2)}
+.tl .go{width:36px;height:36px;border-radius:50%;background:var(--surface);display:grid;place-items:center;color:var(--cenidor)}
+.tl.next .go{background:var(--rosa);color:#fff}
+
+/* ---------- Devociones ---------- */
+.feature{position:relative;margin:4px 20px 0;height:210px;border-radius:28px;overflow:hidden;display:block;width:calc(100% - 40px);text-align:left}
+.feature img{width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.feature::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(31,36,86,.95))}
+.feature .cap{position:absolute;left:18px;right:18px;bottom:16px;z-index:2;color:#fff}
+.feature h2{font-size:25px;line-height:1.1}
+.feature .bar{display:flex;gap:4px;margin-top:10px}
+.feature .bar i{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.28)}
+.feature .bar i.on{background:var(--oro)}
+.section{padding:26px 20px 6px;font-family:var(--display);font-size:21px}
+.soon{display:flex;align-items:center;gap:14px;padding:14px 20px}
+.soon .art{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;flex:none}
+.soon .t{font-weight:600}
+.soon .s{font-size:13.5px;color:var(--ink-2)}
+.soon .tag{margin-left:auto;font-size:12px;font-weight:600;color:var(--ink-2);background:var(--surface-2);padding:4px 10px;border-radius:10px;white-space:nowrap}
+
+/* ---------- Intenciones ---------- */
+.int{display:flex;gap:12px;align-items:flex-start;margin:10px 20px 0;padding:14px 14px 14px 16px;border-radius:20px;background:var(--surface);position:relative;overflow:hidden}
+.int::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--rosa)}
+.int.ok::before{background:var(--oro)}
+.int .tx{flex:1;font-family:var(--read);font-size:16.5px;line-height:1.5;white-space:pre-wrap}
+.int .when{font-family:var(--ui);font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.int.ok .tx{color:var(--ink-2)}
+.int .acts{display:flex;flex-direction:column;gap:6px}
+.icon-btn{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--surface-2);color:var(--ink-2)}
+.icon-btn.gold{background:var(--oro-2);color:#8A6411}
+.empty{margin:30px 28px;text-align:center;color:var(--ink-2)}
+.empty .big{font-family:var(--display);font-size:22px;color:var(--ink);margin-bottom:6px}
+.fab{position:absolute;right:18px;bottom:calc(var(--tabh) + var(--safe-b) + 16px);z-index:25;height:56px;padding:0 22px 0 18px;border-radius:28px;background:var(--rosa);color:#fff;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 10px 24px rgba(229,120,155,.45)}
+.seg{display:flex;margin:4px 20px 6px;background:var(--surface-2);border-radius:14px;padding:4px}
+.seg button{flex:1;padding:8px;border-radius:10px;font-weight:600;font-size:14px;color:var(--ink-2)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* ---------- Ajustes ---------- */
+.group{margin:8px 20px 0;border-radius:20px;background:var(--surface);overflow:hidden}
+.group-h{padding:22px 24px 6px;font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.cell{display:flex;align-items:center;gap:12px;padding:14px 16px;min-height:56px;width:100%;text-align:left;border-bottom:1px solid var(--line)}
+.cell:last-child{border-bottom:0}
+.cell .k{flex:1;font-weight:500}
+.cell .v{color:var(--ink-2);font-size:15px}
+.cell input[type=date],.cell input[type=time]{border:0;background:var(--surface-2);color:var(--ink);border-radius:10px;padding:7px 10px;font:inherit;font-size:15px}
+.cell .ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:none}
+.cell.action .k{color:var(--cenidor);font-weight:600}
+@media (prefers-color-scheme:dark){.cell.action .k{color:var(--oro)}}
+.cell.done-cell .v{color:#8A6411;font-weight:600}
+.foot{padding:18px 24px;font-size:13px;color:var(--ink-2)}
+.foot a{color:inherit}
+
+/* ---------- Mini reproductor ---------- */
+.mini{position:absolute;left:10px;right:10px;bottom:calc(var(--tabh) + var(--safe-b) + 8px);z-index:28;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 8px;border-radius:20px;
+  background:var(--noche);color:#fff;box-shadow:0 12px 30px rgba(31,36,86,.4);transform:translateY(0);transition:transform .3s var(--ease),opacity .3s}
+.app.has-mini .screen{padding-bottom:calc(var(--tabh) + var(--safe-b) + 96px)}
+.mini.off{transform:translateY(140%);opacity:0;pointer-events:none}
+.mini img{width:44px;height:44px;border-radius:12px;object-fit:cover}
+.mini .i{flex:1;min-width:0;text-align:left}
+.mini .a,.mini .b{display:block}
+.mini .a{font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini .b{font-size:12.5px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini .pp{width:44px;height:44px;border-radius:50%;background:var(--oro);color:var(--noche);display:grid;place-items:center;flex:none}
+.mini .prog{position:absolute;left:16px;right:16px;bottom:3px;height:2px;border-radius:1px;background:rgba(255,255,255,.15);overflow:hidden}
+.mini .prog i{display:block;height:100%;background:var(--oro);width:0}
+
+/* ---------- Reproductor a pantalla completa ---------- */
+.player{position:absolute;inset:0;z-index:40;color:#fff;background:var(--noche);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .45s var(--ease);visibility:hidden}
+.player.open{transform:none;visibility:visible}
+.player .bgimg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(38px) saturate(1.3);opacity:.55;transform:scale(1.1)}
+.player .bgveil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(31,36,86,.55) 0%,rgba(31,36,86,.82) 40%,rgba(20,22,58,.97) 100%)}
+.player > *{position:relative}
+.p-top{display:flex;align-items:center;gap:10px;padding:calc(var(--safe-t) + 12px) 14px 6px}
+.p-top .tt{flex:1;text-align:center;font-size:13px;line-height:1.3}
+.p-top .tt b{display:block;font-size:15px;font-weight:600}
+.p-top .tt span{opacity:.7}
+.round{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;flex:none}
+.p-art{display:flex;align-items:center;gap:14px;padding:8px 20px 6px;transition:all .4s var(--ease)}
+.p-art img{width:64px;height:64px;border-radius:16px;object-fit:cover;box-shadow:0 8px 20px rgba(0,0,0,.35);transition:all .4s var(--ease)}
+.p-art .sec{font-size:13px;color:var(--oro);font-weight:600}
+.p-art h2{font-size:22px;line-height:1.15}
+.player.cover .p-art{flex-direction:column;text-align:center;padding-top:20px}
+.player.cover .p-art img{width:min(78%,300px);height:auto;aspect-ratio:1;border-radius:26px}
+.player.cover .lyrics{display:none}
+.lyrics{flex:1;overflow-y:auto;padding:18vh 24px 22vh;scrollbar-width:none;mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 80%,transparent 100%);-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 80%,transparent 100%)}
+.lyrics::-webkit-scrollbar{display:none}
+.ly{font-family:var(--read);font-size:21px;line-height:1.55;margin:0 0 22px;opacity:.32;transition:opacity .45s,transform .45s var(--ease);transform-origin:left center;cursor:pointer}
+.ly.verse{white-space:pre-line;font-size:23px;line-height:1.4}
+.ly.now{opacity:1;transform:scale(1.02)}
+.ly.head{font-family:var(--display);font-size:15px;opacity:.75;color:var(--oro);margin:34px 0 10px;cursor:default;transform:none}
+.ly.head:first-child{margin-top:0}
+.ly-int{margin:0 0 22px;padding:16px;border-radius:20px;background:rgba(229,120,155,.18);border:1px solid rgba(229,120,155,.45);opacity:.4;transition:opacity .4s}
+.ly-int.now{opacity:1}
+.ly-int .h{font-family:var(--display);font-size:19px;color:#FFC4D6}
+.ly-int ul{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.ly-int li{font-family:var(--read);font-size:17px;line-height:1.45}
+.ly-int li::before{content:"♡ ";color:var(--rosa)}
+.ly-int .cd{white-space:nowrap;margin-top:12px;display:flex;align-items:center;gap:10px;font-size:14px}
+.ly-int .cd button{margin-left:auto;padding:7px 14px;border-radius:14px;background:rgba(255,255,255,.16);font-weight:600;font-size:13.5px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 20px 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:7px 12px;border-radius:14px;background:rgba(255,255,255,.1);font-size:13px;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap}
+.chip.on{background:var(--oro);color:var(--noche)}
+.chip.done{color:rgba(255,255,255,.95)}
+.scrub{margin:0 20px;height:4px;border-radius:2px;background:rgba(255,255,255,.16);overflow:hidden}
+.scrub i{display:block;height:100%;background:linear-gradient(90deg,var(--rosa),var(--oro));width:0;transition:width .4s linear}
+.times{display:flex;justify-content:space-between;font-size:12px;opacity:.65;margin:6px 20px 0}
+.ctrls{display:flex;align-items:center;justify-content:space-between;padding:10px 26px calc(var(--safe-b) + 22px)}
+.ctrls .sm{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px}
+.ctrls .md{width:54px;height:54px;border-radius:50%;display:grid;place-items:center}
+.ctrls .big{width:76px;height:76px;border-radius:50%;background:var(--oro);color:var(--noche);display:grid;place-items:center;box-shadow:0 10px 30px rgba(232,182,76,.35);transition:transform .12s}
+.ctrls .big:active{transform:scale(.94)}
+.ctrls svg{width:28px;height:28px}
+.ctrls .big svg{width:34px;height:34px}
+
+/* Fin del día */
+.done-view{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;background:radial-gradient(circle at 50% 38%,rgba(232,182,76,.28),transparent 55%),rgba(20,22,58,.94);opacity:0;pointer-events:none;transition:opacity .5s}
+.done-view.on{opacity:1;pointer-events:auto}
+.done-view h2{font-size:30px;margin-top:8px}
+.done-view p{opacity:.8;max-width:300px}
+.done-view .cust-sm{width:200px;height:200px;position:relative}
+.btn-w{margin-top:16px;padding:14px 26px;border-radius:24px;background:#fff;color:var(--noche);font-weight:700}
+.btn-o{margin-top:10px;padding:12px 22px;border-radius:24px;border:1px solid rgba(255,255,255,.3);font-weight:600}
+
+/* ---------- Hoja inferior ---------- */
+.scrim{position:absolute;inset:0;z-index:50;background:rgba(14,16,48,.45);opacity:0;pointer-events:none;transition:opacity .3s}
+.scrim.on{opacity:1;pointer-events:auto}
+.bsheet{position:absolute;left:0;right:0;bottom:0;z-index:51;background:var(--surface);border-radius:28px 28px 0 0;padding:10px 20px calc(var(--safe-b) + 22px);transform:translateY(105%);transition:transform .38s var(--ease);max-height:88%;overflow:auto}
+.bsheet.on{transform:none}
+.grab{display:block;width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+.sheet-x{position:absolute;top:12px;right:14px;width:34px;height:34px;border-radius:50%;background:var(--surface-2);font-size:20px;line-height:1;color:var(--ink-2)}
+.bsheet h3{font-size:23px;margin-bottom:4px}
+.bsheet textarea{width:100%;min-height:120px;margin-top:12px;border:1px solid var(--line);border-radius:18px;padding:14px;font-family:var(--read);font-size:17px;background:var(--bg);color:var(--ink);resize:none}
+.btn-p{display:block;width:100%;margin-top:14px;height:54px;border-radius:27px;background:var(--noche);color:#fff;font-weight:700;font-size:16px}
+@media (prefers-color-scheme:dark){.btn-p{background:var(--oro);color:var(--noche)}}
+.btn-p:disabled{opacity:.45}
+.sugs{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.sugs button{padding:7px 12px;border-radius:14px;background:var(--surface-2);font-size:13.5px;font-weight:500}
+
+
+.cycle{display:flex;align-items:center;gap:12px;margin:4px 20px 0;padding:14px 16px;border-radius:20px;background:var(--noche);color:#fff}
+.cycle .cy-s{color:rgba(255,255,255,.75)}
+.cy-t{font-family:var(--display);font-size:20px}
+.cy-s{font-size:13.5px;color:var(--ink-2)}
+.cy-dots{margin-left:auto;display:grid;grid-template-columns:repeat(9,6px);gap:3px}
+.cy-dots i{width:6px;height:16px;border-radius:3px;background:rgba(255,255,255,.22)}
+.cy-dots i.on{background:var(--oro)}
+.hist-h{margin:22px 20px 0;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.dev-chips{display:flex;gap:8px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:none}
+.dev-chips button{flex:none;padding:8px 14px;border-radius:14px;background:var(--surface-2);font-weight:600;font-size:14px}
+.dev-chips button.on{background:var(--noche);color:#fff}
+.pick-h{margin-top:18px;font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.picks{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.pick{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;background:var(--bg);cursor:pointer}
+.pick input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--rosa);flex:none}
+.pick .pt{display:block;font-family:var(--read);font-size:16px;line-height:1.45}
+.pick .ps{display:block;font-size:12.5px;color:#8A6411;margin-top:2px}
+.date-in{margin-top:6px;width:100%;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;background:var(--bg);color:var(--ink)}
+
+.medal{margin:0 auto;border-radius:50%;overflow:hidden;box-shadow:0 0 0 4px var(--oro),0 0 0 10px rgba(232,182,76,.25),0 14px 40px rgba(0,0,0,.35)}
+.medal img{width:100%;height:100%;object-fit:cover}
+.dayrows{display:flex;flex-direction:column;gap:8px;margin:4px 20px 0}
+.dayrow{display:grid;grid-template-columns:62px 46px 1fr 36px;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;background:var(--surface);text-align:left;width:100%}
+.dayrow .hr{font-size:13px;font-weight:600;color:var(--ink-2);line-height:1.2}
+.dayrow img{width:46px;height:46px;border-radius:14px;object-fit:cover}
+.dayrow .tx b{display:block;font-weight:600;font-size:15px;line-height:1.25}
+.dayrow .tx small{font-size:12.5px;color:var(--ink-2)}
+.dayrow .st{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--cenidor)}
+.dayrow .st svg{width:18px;height:18px}
+.dayrow.done{opacity:.72}.dayrow.done .st{background:var(--oro);color:var(--noche)}
+.dayrow.next{box-shadow:inset 0 0 0 2px var(--rosa)}.dayrow.next .st{background:var(--rosa);color:#fff}
+.row-card .thumb{width:46px;height:46px;border-radius:14px;object-fit:cover;flex:none}
+.feats{display:flex;flex-direction:column;gap:12px}
+.beads{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.beads i{width:13px;height:13px;border-radius:50%;border:2px solid rgba(255,255,255,.4)}
+.beads i.on{background:var(--oro);border-color:var(--oro)}
+.beads i.cur{background:var(--rosa);border-color:var(--rosa);transform:scale(1.25)}
+.ly-pause{margin:-8px 0 22px;font-size:14px;opacity:.5}.ly-pause.now{opacity:1}
+.ly-pause .skip,.ly-int .cd button{margin-left:10px;padding:6px 12px;border-radius:12px;background:rgba(255,255,255,.16);font-weight:600;font-size:13px;color:#fff}
+.btn-p.ghost{background:transparent;color:var(--ink-2);margin-top:6px}
+.hist-row{display:flex;gap:14px;margin:0 20px;padding:12px 0;border-bottom:1px solid var(--line)}
+.hist-row b{font-family:var(--display);font-size:18px;font-weight:400;color:var(--rosa);min-width:30px}
+.hist-row .hd{display:block;font-size:13px;color:var(--ink-2)}
+.hist-row .hi{display:block;font-family:var(--read);font-size:15.5px}
+.hist-row .hi.ok{color:#8A6411}.hist-row .muted{color:var(--ink-2);font-style:italic}
+
+.greet{display:flex;align-items:flex-start;gap:10px}
+.greet .g1{flex:1}
+.hbtn{width:42px;height:42px;border-radius:50%;background:var(--surface);display:grid;place-items:center;color:var(--cenidor);flex:none;box-shadow:0 1px 3px rgba(31,36,86,.08)}
+@media (prefers-color-scheme:dark){.hbtn{color:var(--oro)}}
+.install-banner{display:flex;align-items:center;gap:12px;margin:14px 20px 0;padding:12px 14px;border-radius:18px;background:var(--noche);color:#fff;text-align:left;width:calc(100% - 40px)}
+.install-banner img{width:40px;height:40px;border-radius:11px}
+.install-banner b{display:block;font-size:15px}.install-banner small{opacity:.75;font-size:13px}
+.install-banner .x2{margin-left:auto;opacity:.7;font-size:20px;padding:4px 6px}
+.update-bar{position:absolute;left:12px;right:12px;top:calc(var(--safe-t) + 10px);z-index:58;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:var(--oro);color:var(--noche);font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.update-bar button{margin-left:auto;padding:8px 14px;border-radius:12px;background:var(--noche);color:#fff;font-weight:700}
+.steps{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:10px;counter-reset:st}
+.steps li{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;background:var(--bg);counter-increment:st;font-size:15.5px;line-height:1.45}
+.steps li::before{content:counter(st);flex:none;width:28px;height:28px;border-radius:50%;background:var(--noche);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+@media (prefers-color-scheme:dark){.steps li::before{background:var(--oro);color:var(--noche)}}
+.kbd{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:8px;background:var(--surface-2);font-weight:600;white-space:nowrap}
+.kbd svg{width:16px;height:16px}
+.os-tabs{display:flex;gap:8px;margin-top:12px}
+.os-tabs button{flex:1;padding:10px;border-radius:14px;background:var(--surface-2);font-weight:700}
+.os-tabs button.on{background:var(--noche);color:#fff}
+.share-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.share-grid a,.share-grid button{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:none}
+.share-grid .sic{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;color:#fff}
+.qr{display:flex;justify-content:center;margin-top:16px}
+.qr canvas,.qr img{width:180px;height:180px;border-radius:14px;background:#fff;padding:10px}
+.linkbox{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--bg);font-size:14px;word-break:break-all;color:var(--ink-2)}
+.toast{position:absolute;left:50%;top:calc(var(--safe-t) + 14px);z-index:60;transform:translate(-50%,-140%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:16px;font-size:14px;font-weight:500;transition:transform .35s var(--ease);max-width:88%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.toast.on{transform:translate(-50%,0)}
+.hidden{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="stage">
+<div class="app" id="app">
+  <main class="screen" id="screen" tabindex="-1"></main>
+
+  <button class="mini off" id="mini" aria-label="Abrir reproductor">
+    <img id="miniImg" alt="">
+    <span class="i"><span class="a" id="miniA"></span><span class="b" id="miniB"></span></span>
+    <span class="pp" id="miniPP" role="button" aria-label="Reproducir o pausar"></span>
+    <span class="prog"><i id="miniProg"></i></span>
+  </button>
+
+  <nav class="tabs" id="tabs" aria-label="Navegación">
+    <button class="tab" data-tab="hoy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Hoy</button>
+    <button class="tab" data-tab="devociones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5M12 7v6M9.5 9.5h5"/></svg>Devociones</button>
+    <button class="tab" data-tab="intenciones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Intenciones<span class="badge hidden" id="intBadge"></span></button>
+    <button class="tab" data-tab="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>Recordatorios</button>
+  </nav>
+
+  <section class="player" id="player" aria-label="Reproductor de oración">
+    <div class="bgimg" id="pBg"></div><div class="bgveil"></div>
+    <div class="p-top">
+      <button class="round" id="pClose" aria-label="Minimizar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <div class="tt"><span id="pDev"></span><b id="pDay"></b></div>
+      <button class="round" id="pView" aria-label="Cambiar vista"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+    </div>
+    <div class="p-art"><img id="pImg" alt=""><div><div class="sec" id="pSec"></div><h2 id="pTitle"></h2></div></div>
+    <div class="lyrics" id="lyrics"></div>
+    <div class="chips" id="chips"></div>
+    <div class="scrub"><i id="pBar"></i></div>
+    <div class="times"><span id="tA">0:00</span><span id="tB">0:00</span></div>
+    <div class="ctrls">
+      <button class="sm" id="pSpeed" aria-label="Velocidad de la voz">1×</button>
+      <button class="md" id="pPrev" aria-label="Párrafo anterior"><svg viewBox="0 0 24 24" fill="#fff"><path d="M6 6h2v12H6zM9.5 12 18 6v12z"/></svg></button>
+      <button class="big" id="pPlay" aria-label="Reproducir"></button>
+      <button class="md" id="pNext" aria-label="Párrafo siguiente"><svg viewBox="0 0 24 24" fill="#fff"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+      <button class="sm" id="pText" aria-label="Tamaño del texto">Aa</button>
+    </div>
+    <div class="done-view" id="doneView"></div>
+  </section>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="bsheet" id="sheet" role="dialog" aria-modal="true"></div>
+  <div class="toast" id="toast" role="status"></div>
+</div>
+</div>
+<audio id="aud" preload="auto"></audio>
+
+<script>
+"use strict";
+/* ================= Utilidades ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const I={
+  play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.2-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+  pause:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg>',
+  chev:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>',
+  back:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>',
+  check:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>',
+  trash:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
+  plus:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  cal:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  clock:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  down:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v12M6 11l6 6 6-6M5 21h14"/></svg>',
+  heart:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+  loop:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.7L20 8.6M20 4v4.6h-4.6M20 12a8 8 0 0 1-13.7 5.7L4 15.4M4 20v-4.6h4.6"/></svg>',
+};
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const DIAS=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const ymd=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const parseYmd=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const diffDays=(a,b)=>Math.round((parseYmd(ymd(b))-parseYmd(ymd(a)))/864e5);
+const fecha=d=>DIAS[d.getDay()]+" "+d.getDate()+" de "+MESES[d.getMonth()];
+const fechaCorta=d=>d.getDate()+" "+MESES[d.getMonth()].slice(0,3);
+const rango=(a,b)=>{const A=parseYmd(a),B=parseYmd(b);return a===b?fecha(A):A.getMonth()===B.getMonth()?`${A.getDate()} al ${B.getDate()} de ${MESES[B.getMonth()]}`:`${fechaCorta(A)} al ${fechaCorta(B)}`};
+const hora12=h=>{const[a,b]=h.split(":").map(Number);return ((a%12)||12)+":"+String(b).padStart(2,"0")+(a<12?" a. m.":" p. m.")};
+const mmss=s=>Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
+const uid=()=>Math.random().toString(36).slice(2,9);
+const hoyStr=()=>ymd(new Date());
+function toast(m,ms=2600){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),ms)}
+function saludo(){const h=new Date().getHours();return h<12?"Buenos días":h<19?"Buenas tardes":"Buenas noches"}
+const U=dev=>({novena:"Novena",coronilla:"Coronilla",diaria:"Oración"})[dev.type]||"Rezo";
+const u=dev=>U(dev).toLowerCase();
+
+/* ================= Almacenamiento ================= */
+const Store={db:null,uid:null,cache:{},
+  async init(){try{const db=await claude.use("db"),us=await claude.use("user");if(db&&us){const id=await us.id();if(id){this.uid=id;this.db=db}}}catch(e){}},
+  lk:id=>"hubdefe:"+id,
+  async get(id){
+    if(this.cache[id])return this.cache[id];
+    let v=null;
+    if(this.db){try{const s=await this.db.collection("data/users/"+this.uid).doc(id).get();if(s&&s.exists)v=JSON.parse(JSON.stringify(s.data()))}catch(e){}}
+    if(!v){try{v=JSON.parse(localStorage.getItem(this.lk(id))||"null")}catch(e){}}
+    v=v||{};this.cache[id]=v;return v},
+  async set(id,v){this.cache[id]=v;try{localStorage.setItem(this.lk(id),JSON.stringify(v))}catch(e){}
+    if(this.db){try{await this.db.collection("data/users/"+this.uid).doc(id).set(JSON.parse(JSON.stringify(v)))}catch(e){console.warn(e)}}}
+};
+/* doc <idDevoción> = {hora, horas?, hoy?, avisos?, ciclos:[{n,start,done[],fin,creados[],creadosKey,intenciones:[{id,texto,fecha,recibida,desde?}]}]} */
+const mkCiclo=(n,start,ints=[])=>({n,start,done:[],fin:null,creados:[],creadosKey:null,intenciones:ints});
+function proximoFijo(mmdd){ // próxima fecha fija (p. ej. 16 de diciembre), o la de este año si estamos dentro de la novena
+  const[m,d]=mmdd.split("-").map(Number),t=new Date();let s=new Date(t.getFullYear(),m-1,d);
+  if(diffDays(s,t)>8)s=new Date(t.getFullYear()+1,m-1,d);return ymd(s)}
+async function devState(id){
+  const dev=await loadDev(id);const st=await Store.get(id);
+  if(!Array.isArray(st.ciclos)){
+    let c;
+    if(id==="divino-nino"){ // migración desde versiones anteriores
+      const p=await Store.get("perfil");
+      const ints=[...(st.intenciones||[]).map(t=>({id:uid(),texto:t,fecha:hoyStr(),recibida:null})),...(p.intenciones||[]).map(x=>({id:x.id||uid(),texto:x.texto,fecha:x.fecha||hoyStr(),recibida:x.recibida||null}))];
+      c=mkCiclo(1,st.start||null,ints);c.done=st.done||[];c.creados=st.creados||[];c.creadosKey=st.creadosKey||null;
+      if(p.intenciones&&p.intenciones.length){p.intenciones=[];await Store.set("perfil",p)}
+    }else c=mkCiclo(1,dev.fixedStart?proximoFijo(dev.fixedStart):null);
+    for(const k of Object.keys(st))delete st[k];
+    st.hora=dev.hora||"20:00";st.ciclos=[c];
+    if(dev.type==="diaria"){st.horas=Object.fromEntries(dev.days.map(d=>[d.n,d.hora]));st.hoy={fecha:hoyStr(),done:[]}}
+    await Store.set(id,st);
+  }
+  if(dev.type==="diaria"&&(!st.hoy||st.hoy.fecha!==hoyStr())){st.hoy={fecha:hoyStr(),done:[]}}
+  return st;
+}
+const cur=st=>st.ciclos[st.ciclos.length-1];
+const activas=c=>c.intenciones.filter(x=>!x.recibida);
+let caps={};
+
+/* ================= Datos ================= */
+let CATALOG=null;const DEVS={};
+const loadCatalog=async()=>CATALOG||(CATALOG=await (await fetch("catalog.json")).json());
+const loadDev=async id=>DEVS[id]||(DEVS[id]=await (await fetch("devociones/"+id+"/data.json")).json());
+const byType=async t=>(await loadCatalog()).devociones.filter(k=>k.type===t);
+function estado(dev,c){
+  const total=dev.days.length,done=new Set(c.done),sig=dev.days.find(d=>!done.has(d.n));
+  let hoyN=null;if(c.start)hoyN=diffDays(parseYmd(c.start),new Date())+1;
+  const atraso=(c.start&&sig&&hoyN>=1)?Math.max(0,Math.min(hoyN,total)-sig.n):0;
+  return{total,done,sig,hoyN,atraso,completa:done.size>=total,empieza:c.start&&hoyN<1}
+}
+async function heroNovena(){ // la novena que toca: en curso y empezada; las de fecha fija ganan dentro de su temporada
+  const list=await byType("novena");let best=null,bs=-1;
+  for(const k of list){const dev=await loadDev(k.id),st=await devState(k.id),c=cur(st),e=estado(dev,c);
+    let s=0;if(!e.completa&&c.start&&e.hoyN>=1)s=dev.fixedStart&&e.hoyN<=9?4:3;else if(!e.completa&&e.done.size)s=2;else if(k.id==="divino-nino")s=1;
+    if(s>bs){bs=s;best=k.id}}
+  return best;
+}
+
+/* ================= Custodia (9 rayos = 9 días) ================= */
+const Lit=new Set();
+function custodia(dev,e,{size=260}={}){
+  const c=130,rays=[];
+  for(let k=0;k<36;k++){if(k%4===0)continue;
+    rays.push(`<path class="ray" d="M ${c-2.2} ${c-76} L ${c} ${c-(k%2?104:112)} L ${c+2.2} ${c-76} Z" fill="var(--oro)" opacity=".28" transform="rotate(${k*10} ${c} ${c})"/>`)}
+  dev.days.forEach((d,i)=>{const lit=e.done.has(d.n),today=!e.completa&&e.sig&&e.sig.n===d.n;
+    const fill=lit?"var(--oro)":today?"var(--rosa)":"color-mix(in srgb,var(--cenidor) 22%,transparent)";
+    rays.push(`<path class="ray ${today?"today":""} ${lit&&Lit.has(d.n)?"lit":""}" d="M ${c-8} ${c-74} L ${c} ${c-128} L ${c+8} ${c-74} Z" fill="${fill}" transform="rotate(${i*40} ${c} ${c})"><title>${esc(d.label)}${lit?" (rezado)":""}</title></path>`)});
+  return `<div class="custodia" style="width:${size}px;height:${size}px"><svg viewBox="0 0 260 260" width="${size}" height="${size}" aria-hidden="true">${rays.join("")}</svg><div class="face" style="width:${size*.51}px;height:${size*.51}px"><img src="${dev.cover}" alt=""></div></div>`;
+}
+const medalla=(img,size=150)=>`<div class="medal" style="width:${size}px;height:${size}px"><img src="${img}" alt=""></div>`;
+
+/* ================= Navegación ================= */
+let TAB="hoy";
+function parseHash(){const h=location.hash.slice(1);const m=h.match(/^(.+)-dia-(\d+)$/);
+  if(m)return{dev:m[1],day:+m[2]};if(["hoy","devociones","intenciones","ajustes"].includes(h))return{tab:h};if(h&&h!=="inicio")return{nov:h};return{tab:"hoy"}}
+async function onRoute(){
+  const r=parseHash();
+  if(r.day){await openPlayer(r.dev,r.day);return}
+  closePlayer(false);
+  if(r.nov){await renderDev(r.nov);setTabs("devociones");return}
+  TAB=r.tab;setTabs(TAB);
+  await ({hoy:renderHoy,devociones:renderDevociones,intenciones:renderIntenciones,ajustes:renderAjustes})[TAB]();
+}
+function setTabs(t){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.tab===t))}
+function go(h){if(location.hash==="#"+h)onRoute();else location.hash=h}
+window.addEventListener("hashchange",onRoute);
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>go(b.dataset.tab));
+function paint(html){const s=$("#screen");s.innerHTML=`<div class="enter">${html}</div>`;s.scrollTop=0}
+
+/* ================= Pantalla: Hoy ================= */
+async function filasDelDia(){ // oraciones diarias + coronilla, ordenadas por hora
+  const rows=[];
+  for(const k of await byType("diaria")){const dev=await loadDev(k.id),st=await devState(k.id);
+    dev.days.forEach(d=>rows.push({hora:st.horas[d.n]||d.hora,t:d.title,s:d.mins+" min",img:d.img,done:st.hoy.done.includes(d.n),go:`${k.id}-dia-${d.n}`}))}
+  for(const k of await byType("coronilla")){const dev=await loadDev(k.id),st=await devState(k.id);
+    const hoyN=st.ciclos.filter(c=>c.fin===hoyStr()).length;
+    rows.push({hora:st.hora,t:dev.title,s:hoyN?`Rezada hoy${hoyN>1?" "+hoyN+" veces":""}`:`${dev.days[0].mins} min, con tu intención`,img:dev.cover,done:hoyN>0,go:`${k.id}-dia-1`})}
+  rows.sort((a,b)=>a.hora.localeCompare(b.hora));
+  const now=new Date().getHours()*60+new Date().getMinutes();
+  const nextIdx=rows.findIndex(r=>!r.done&&(+r.hora.slice(0,2)*60+ +r.hora.slice(3))>=now-90);
+  return rows.map((r,i)=>`<button class="dayrow ${r.done?"done":""} ${i===nextIdx?"next":""}" onclick="go('${r.go}')"><span class="hr">${hora12(r.hora).replace(" ","&nbsp;")}</span><img src="${r.img}" alt=""><span class="tx"><b>${esc(r.t)}</b><small>${esc(r.s)}</small></span><span class="st">${r.done?I.check:I.play}</span></button>`).join("");
+}
+async function renderHoy(){
+  const id=await heroNovena(),dev=await loadDev(id),st=await devState(id),c=cur(st),e=estado(dev,c);
+  const act=activas(c);const d=e.sig||dev.days[dev.days.length-1];
+  let head,cta;
+  if(e.completa){
+    head=`<div class="day">${esc(dev.short)}: novena #${c.n} completada</div><h1>Los nueve rayos están encendidos</h1><div class="meta">Da gracias por lo recibido. Cuando quieras, empieza otra novena con las mismas intenciones o con nuevas.</div>`;
+    cta=`<button class="cta" onclick="sheetNuevoCiclo('${id}')"><span class="pl">${I.loop}</span>Empezar una nueva novena</button>`;
+  }else{
+    let meta=`${d.mins} minutos con voz guiada`;
+    if(e.empieza)meta=`Empieza el ${fecha(parseYmd(c.start))}`;
+    else if(e.atraso>0)meta=`Vas ${e.atraso===1?"un día":e.atraso+" días"} atrasado. Puedes ponerte al día hoy.`;
+    head=`<div class="day">${esc(dev.title)}${c.n>1?`, #${c.n}`:""}</div><h1>${esc(d.label)}: ${esc(d.title)}</h1><div class="meta">${esc(meta)}</div>`;
+    cta=`<button class="cta" onclick="go('${id}-dia-${d.n}')"><span class="pl">${I.play}</span>Rezar el ${esc(d.label.toLowerCase())}</button>`;
+  }
+  // otra novena en curso
+  let otra="";for(const k of await byType("novena")){if(k.id===id)continue;const dv=await loadDev(k.id),sv=await devState(k.id),cv=cur(sv),ev=estado(dv,cv);
+    if(!ev.completa&&cv.start&&(ev.hoyN>=-14))otra+=`<button class="row-card" onclick="go('${k.id}')"><img class="thumb" src="${dv.cover}" alt=""><span><span class="t">${esc(dv.title)}</span><div class="s">${ev.empieza?"Empieza el "+fecha(parseYmd(cv.start)):`Día ${ev.sig.n} de 9`}</div></span><span class="chev">${I.chev}</span></button>`}
+  const pr=d.blocks.find(b=>b.kind==="practica");
+  paint(`
+    <div class="greet"><div class="g1"><div class="hello">${saludo()}</div><div class="date">Hoy es ${fecha(new Date())}</div></div>
+      <button class="hbtn" aria-label="Compartir la app" onclick="compartir()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button></div>
+    ${bannerInstalar()}
+    ${custodia(dev,e)}
+    <div class="today-head">${head}</div>
+    ${cta}
+    <button class="ghost-link" onclick="go('${id}')">Ver los nueve días</button>
+    <button class="row-card" onclick="INT_DEV='${id}';go('intenciones')"><span class="ic" style="background:var(--rosa-2);color:var(--rosa)">${I.heart}</span><span><span class="t">${act.length?act.length+(act.length===1?" intención":" intenciones")+" en esta novena":"Escribe las intenciones de esta novena"}</span><div class="s">${act.length?esc(act[0].texto.slice(0,46))+(act[0].texto.length>46||act.length>1?"…":""):"Se presentan cada día"}</div></span><span class="chev">${I.chev}</span></button>
+    ${otra}
+    <div class="section">Tu día de oración</div>
+    <div class="dayrows">${await filasDelDia()}</div>
+    ${!e.completa&&pr?`<div class="practica"><h3>Práctica del día</h3><p>${esc(pr.paras[0].text)}</p></div>`:""}
+  `);
+  Lit.clear();badge();
+}
+
+/* ================= Nuevo ciclo (nueva novena) ================= */
+async function sheetNuevoCiclo(id){
+  const dev=await loadDev(id),st=await devState(id),c=cur(st),e=estado(dev,c);
+  const prev=c.intenciones;
+  const lista=prev.length?prev.map(x=>`<label class="pick"><input type="checkbox" value="${x.id}" ${x.recibida?"":"checked"}><span><span class="pt">${esc(x.texto)}</span>${x.recibida?`<span class="ps">Gracia recibida el ${fechaCorta(parseYmd(x.recibida))}</span>`:""}</span></label>`).join("")
+    :`<div class="sub" style="margin-top:8px">La novena anterior no tenía intenciones escritas.</div>`;
+  const ini=dev.fixedStart?proximoFijo(dev.fixedStart):hoyStr();
+  openSheet(`<h3>Nueva novena</h3>
+    <div class="sub">${esc(dev.title)}. ${e.completa?`Terminaste la novena #${c.n}.`:`La novena #${c.n} va en el día ${e.done.size} de 9 y quedará guardada en tu historial.`} Elige qué intenciones mantienes y añade las nuevas.</div>
+    ${prev.length?`<div class="pick-h">Intenciones de la novena #${c.n}</div><div class="picks">${lista}</div>`:lista}
+    <div class="pick-h">Nueva intención</div>
+    <textarea id="ncTx" placeholder="En esta novena te pido por…" maxlength="400" style="min-height:84px;margin-top:6px"></textarea>
+    <div class="pick-h">Día primero</div>
+    <input type="date" id="ncStart" value="${ini}" class="date-in">
+    <button class="btn-p" onclick="crearCiclo('${id}')">Empezar la novena #${c.n+1}</button>`);
+}
+async function crearCiclo(id){
+  const dev=await loadDev(id),st=await devState(id),c=cur(st);
+  const keep=[...document.querySelectorAll('.picks input:checked')].map(i=>i.value);
+  const ints=c.intenciones.filter(x=>keep.includes(x.id)).map(x=>({id:uid(),texto:x.texto,fecha:hoyStr(),recibida:null,desde:c.n}));
+  const t=$("#ncTx").value.trim();if(t)ints.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null});
+  if(!c.fin)c.fin=hoyStr();
+  st.ciclos.push(mkCiclo(c.n+1,$("#ncStart").value||hoyStr(),ints));
+  await Store.set(id,st);closeSheet();P.reset();
+  toast(`Novena #${c.n+1} iniciada con ${ints.length} ${ints.length===1?"intención":"intenciones"}`,3200);
+  go("hoy");
+}
+
+/* ================= Pantalla de una devoción ================= */
+async function renderDev(id){
+  const dev=await loadDev(id),st=await devState(id),c=cur(st);
+  const hero=(sub)=>`<div class="nov-hero"><img src="${dev.cover}" alt=""><button class="back-fab" onclick="go('devociones')" aria-label="Volver">${I.back}</button><button class="back-fab" style="left:auto;right:14px" aria-label="Compartir esta devoción" onclick="compartir('${id}','Te comparto la ${esc(dev.title)}, con voz guiada, en Hub de Fe.')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button><div class="cap"><h1>${esc(dev.title)}</h1><div class="s">${sub}</div></div></div>`;
+  const foot=`<div class="foot">${dev.sourceName?esc(dev.sourceName)+". ":""}${dev.source?`<a href="${dev.source}" target="_blank" rel="noopener">Fuente del texto</a>. `:""}Voz: ${esc(dev.voice)}.</div>`;
+  if(dev.type==="novena"){
+    const e=estado(dev,c);
+    const items=dev.days.map(d=>{const done=e.done.has(d.n),next=!e.completa&&e.sig&&e.sig.n===d.n;
+      const f=c.start?fecha(addDays(parseYmd(c.start),d.n-1)):`${d.mins} min`;
+      return `<button class="tl ${done?"done":""} ${next?"next":""}" onclick="go('${id}-dia-${d.n}')"><span class="num">${done?I.check:d.n}</span><img src="${d.img}" alt=""><span><div class="tt">${esc(d.title)}</div><div class="dd">${esc(d.label)}, ${esc(f)}</div></span><span class="go">${I.play}</span></button>`}).join("");
+    paint(`${hero(`Novena #${c.n}: ${e.done.size} de ${e.total} días rezados${c.start?(e.empieza?`. Empieza el ${fechaCorta(parseYmd(c.start))}`:`. Empezó el ${fechaCorta(parseYmd(c.start))}`):""}`)}
+      <div class="timeline">${items}</div>
+      ${e.completa?`<button class="cta" style="margin-top:22px" onclick="sheetNuevoCiclo('${id}')"><span class="pl">${I.loop}</span>Empezar una nueva novena</button>`:""}${foot}`);
+  }else if(dev.type==="coronilla"){
+    const hechos=st.ciclos.filter(k=>k.fin).reverse();
+    const hoyN=hechos.filter(k=>k.fin===hoyStr()).length;
+    paint(`${hero(hoyN?`Rezada hoy${hoyN>1?" "+hoyN+" veces":""}. ${hechos.length} en total`:`${hechos.length?hechos.length+" rezadas en total":"Cinco decenas, unos "+dev.days[0].mins+" minutos"}`)}
+      <button class="cta" style="margin-top:22px" onclick="go('${id}-dia-1')"><span class="pl">${I.play}</span>Rezar la coronilla</button>
+      <div class="hint" style="margin-top:14px">Cada coronilla lleva su intención: te la pedimos antes de empezar. Hora habitual: ${hora12(st.hora)}.</div>
+      <div class="section">Coronillas rezadas</div>
+      ${hechos.length?hechos.map(k=>`<div class="hist-row"><b>#${k.n}</b><span><span class="hd">${esc(fecha(parseYmd(k.fin)))}</span>${k.intenciones.length?k.intenciones.map(x=>`<span class="hi ${x.recibida?"ok":""}">${x.recibida?"✓ ":"♡ "}${esc(x.texto)}</span>`).join(""):`<span class="hi muted">Sin intención escrita</span>`}</span></div>`).join(""):`<div class="sub pad">Aún no has rezado ninguna. Tu primera coronilla aparecerá aquí con su intención.</div>`}
+      ${foot}`);
+  }else{
+    paint(`${hero(esc(dev.subtitle))}
+      <div class="dayrows" style="margin-top:18px">${dev.days.map(d=>{const done=st.hoy.done.includes(d.n);return `<button class="dayrow ${done?"done":""}" onclick="go('${id}-dia-${d.n}')"><span class="hr">${hora12(st.horas[d.n]||d.hora).replace(" ","&nbsp;")}</span><img src="${d.img}" alt=""><span class="tx"><b>${esc(d.title)}</b><small>${d.mins} min${done?", rezada hoy":""}</small></span><span class="st">${done?I.check:I.play}</span></button>`}).join("")}</div>
+      <div class="hint" style="margin-top:14px">Se reinician cada día. Puedes cambiar las horas en Recordatorios.</div>${foot}`);
+  }
+}
+
+/* ================= Pantalla: Devociones ================= */
+async function renderDevociones(){
+  const cat=await loadCatalog();let feat="",rows="";
+  for(const k of cat.devociones){const dev=await loadDev(k.id),st=await devState(k.id),c=cur(st);
+    if(dev.type==="novena"){const e=estado(dev,c);
+      const sub=e.completa?`Novena #${c.n} completada`:e.done.size?`Novena #${c.n}: vas en el día ${e.sig.n} de 9`:e.empieza?`Empieza el ${fecha(parseYmd(c.start))}`:esc(dev.subtitle);
+      feat+=`<button class="feature" onclick="go('${k.id}')"><img src="${k.cover}" alt=""><div class="cap"><h2>${esc(k.title)}</h2><div style="opacity:.85;font-size:14px;margin-top:4px">${sub}</div><div class="bar">${dev.days.map(d=>`<i class="${e.done.has(d.n)?"on":""}"></i>`).join("")}</div></div></button>`;
+    }else{
+      const s=dev.type==="coronilla"?`${st.ciclos.filter(x=>x.fin).length} rezadas. Habitual a las ${hora12(st.hora)}`:`${st.hoy.done.length} de ${dev.days.length} hoy`;
+      rows+=`<button class="row-card" onclick="go('${k.id}')"><img class="thumb" src="${k.cover}" alt=""><span><span class="t">${esc(k.title)}</span><div class="s">${esc(s)}</div></span><span class="chev">${I.chev}</span></button>`;
+    }}
+  paint(`<div class="screen-title">Devociones</div><div class="section" style="padding-top:4px">Novenas</div><div class="feats">${feat}</div><div class="section">Oraciones</div>${rows}
+    <div class="section">Próximamente</div><div class="soon"><span class="art" style="background:#3D5BB01f;color:#3D5BB0"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="17" cy="7.5" r="1.6"/><circle cx="19" cy="12.5" r="1.6"/><circle cx="7" cy="7.5" r="1.6"/><circle cx="5" cy="12.5" r="1.6"/><path d="M12 15v6M9.5 18h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span><span><div class="t">Santo Rosario</div><div class="s">Misterios del día; cada rosario con su intención</div></span><span class="tag">Pronto</span></div>`);
+}
+
+/* ================= Pantalla: Intenciones (por devoción y por rezo) ================= */
+let INT_VIEW="actual",INT_DEV=null;
+function intCard(id,x,cn,editable,un){
+  return `<div class="int ${x.recibida?"ok":""}"><div class="tx">${esc(x.texto)}<div class="when">${x.recibida?"Gracia recibida el "+fechaCorta(parseYmd(x.recibida)):x.desde?`Viene de la ${un} #${x.desde}`:"Desde el "+fechaCorta(parseYmd(x.fecha))}</div></div>
+    <div class="acts">${x.recibida?`<button class="icon-btn" title="Desmarcar" aria-label="Quitar marca de gracia recibida" onclick="recibida('${id}',${cn},'${x.id}',false)">${I.loop}</button>`:`<button class="icon-btn gold" title="Gracia recibida" aria-label="Marcar como gracia recibida" onclick="recibida('${id}',${cn},'${x.id}',true)">${I.check}</button>`}${editable?`<button class="icon-btn" aria-label="Borrar" onclick="borrarInt('${id}',${cn},'${x.id}')">${I.trash}</button>`:""}</div></div>`;
+}
+async function renderIntenciones(){
+  const cat=await loadCatalog();const conInt=cat.devociones.filter(k=>k.type!=="diaria");
+  if(!INT_DEV||!conInt.find(k=>k.id===INT_DEV))INT_DEV=await heroNovena();const id=INT_DEV;
+  const dev=await loadDev(id),st=await devState(id),c=cur(st),un=u(dev);
+  const devChips=`<div class="dev-chips">${conInt.map(k=>`<button class="${k.id===id?"on":""}" onclick="INT_DEV='${k.id}';INT_VIEW='actual';renderIntenciones()">${esc(k.short)}</button>`).join("")}</div>`;
+  const anteriores=st.ciclos.filter(k=>k!==c&&(k.done.length||k.intenciones.length)).reverse();
+  let body;
+  if(INT_VIEW==="actual"){
+    let estadoTxt,dots="",cerrada=false;
+    if(dev.type==="novena"){const e=estado(dev,c);cerrada=e.completa;
+      estadoTxt=e.completa?`Terminada${c.fin?" el "+fechaCorta(parseYmd(c.fin)):""}`:c.start?(e.empieza?`Empieza el ${fechaCorta(parseYmd(c.start))}`:`Día ${e.sig.n} de 9, desde el ${fechaCorta(parseYmd(c.start))}`):"Sin empezar";
+      dots=`<div class="cy-dots">${dev.days.map(d=>`<i class="${e.done.has(d.n)?"on":""}"></i>`).join("")}</div>`;
+    }else{cerrada=!!c.fin;estadoTxt=c.fin?`Rezada el ${fechaCorta(parseYmd(c.fin))}`:"La próxima que reces"}
+    const nuevo=dev.type==="novena"?`<button class="row-card" style="background:var(--noche);color:#fff" onclick="sheetNuevoCiclo('${id}')"><span class="ic" style="background:var(--oro);color:var(--noche)">${I.loop}</span><span><span class="t">Empezar una nueva novena</span><div class="s" style="color:rgba(255,255,255,.75)">Mantén estas intenciones o cámbialas</div></span><span class="chev" style="color:#fff">${I.chev}</span></button>`
+      :`<button class="row-card" style="background:var(--noche);color:#fff" onclick="go('${id}-dia-1')"><span class="ic" style="background:var(--oro);color:var(--noche)">${I.play}</span><span><span class="t">Rezar otra ${un}</span><div class="s" style="color:rgba(255,255,255,.75)">Te pediremos su intención</div></span><span class="chev" style="color:#fff">${I.chev}</span></button>`;
+    body=`<div class="cycle"><div><div class="cy-t">${U(dev)} #${c.n}</div><div class="cy-s">${esc(estadoTxt)}</div></div>${dots}</div>
+      ${cerrada?nuevo:""}
+      ${c.intenciones.length?c.intenciones.map(x=>intCard(id,x,c.n,true,un)).join(""):`<div class="empty"><div class="big">¿Por qué intención rezas esta ${un}?</div>${dev.type==="novena"?"La voz presenta tus intenciones cada día y deja un momento de silencio.":"Cada rezo lleva su motivo. Escríbelo antes de empezar."}</div>`}`;
+  }else{
+    body=anteriores.length?anteriores.map(k=>{const ok=k.intenciones.filter(x=>x.recibida).length;
+      const when=k.start&&k.fin?rango(k.start,k.fin):k.fin?fecha(parseYmd(k.fin)):k.start?"Desde el "+fechaCorta(parseYmd(k.start)):"";
+      return `<div class="hist-h"><div class="cy-t">${U(dev)} #${k.n}</div><div class="cy-s">${esc(when)}${dev.type==="novena"?` · ${k.done.length} de 9 días`:""}${k.intenciones.length?` · ${ok} de ${k.intenciones.length} gracias recibidas`:""}</div></div>
+        ${k.intenciones.length?k.intenciones.map(x=>intCard(id,x,k.n,false,un)).join(""):`<div class="sub pad" style="margin-top:6px">Sin intenciones escritas.</div>`}`}).join("")
+      :`<div class="empty"><div class="big">Aún no hay ${un==="oración"?"oraciones":un+"s"} anteriores</div>Aquí quedarán sus intenciones y las gracias recibidas.</div>`;
+  }
+  paint(`<div class="screen-title">Intenciones</div>${devChips}
+    <div class="seg"><button class="${INT_VIEW==="actual"?"on":""}" onclick="INT_VIEW='actual';renderIntenciones()">${U(dev)} #${c.n}</button><button class="${INT_VIEW==="hist"?"on":""}" onclick="INT_VIEW='hist';renderIntenciones()">Anteriores (${anteriores.length})</button></div>
+    ${body}`);
+  const cerrada=dev.type==="novena"?estado(dev,c).completa:!!c.fin;
+  if(INT_VIEW==="actual"&&!cerrada)$("#screen").insertAdjacentHTML("beforeend",`<button class="fab" onclick="sheetIntencion('${id}')">${I.plus}Nueva intención</button>`);
+}
+function sheetIntencion(id){
+  const sugs=["Por la salud de mi familia","Por mi trabajo","Por la paz en mi hogar","Por los enfermos","Por las almas del purgatorio"];
+  openSheet(`<h3>Nueva intención</h3><div class="sub">Escríbela como se la dirías a Dios.</div>
+    <textarea id="intTx" placeholder="Te pido por…" maxlength="400"></textarea>
+    <div class="sugs">${sugs.map(s=>`<button onclick="document.getElementById('intTx').value='${s}';document.getElementById('intOk').disabled=false">${s}</button>`).join("")}</div>
+    <button class="btn-p" id="intOk" disabled onclick="guardarInt('${id}')">Guardar intención</button>`);
+  const t=$("#intTx");t.oninput=()=>$("#intOk").disabled=!t.value.trim();setTimeout(()=>t.focus(),350);
+}
+async function guardarInt(id){const t=$("#intTx").value.trim();if(!t)return;const st=await devState(id),c=cur(st);c.intenciones.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null});await Store.set(id,st);closeSheet();INT_VIEW="actual";toast("Intención guardada");P.reset();renderIntenciones();badge()}
+async function recibida(id,cn,iid,on){const st=await devState(id),k=st.ciclos.find(x=>x.n===cn),x=k.intenciones.find(i=>i.id===iid);x.recibida=on?hoyStr():null;await Store.set(id,st);if(on)toast("¡Gracias, Señor!");if(cn===cur(st).n)P.reset();renderIntenciones();badge()}
+async function borrarInt(id,cn,iid){const st=await devState(id),k=st.ciclos.find(x=>x.n===cn);k.intenciones=k.intenciones.filter(i=>i.id!==iid);await Store.set(id,st);P.reset();renderIntenciones();badge()}
+async function badge(){const id=await heroNovena(),st=await devState(id),n=activas(cur(st)).length;const b=$("#intBadge");b.textContent=n;b.classList.toggle("hidden",!n)}
+
+/* ================= Pantalla: Recordatorios ================= */
+let AJ_DEV=null;
+async function renderAjustes(){
+  const cat=await loadCatalog();if(!AJ_DEV)AJ_DEV=await heroNovena();const id=AJ_DEV;
+  const dev=await loadDev(id),st=await devState(id),c=cur(st);
+  const chips=`<div class="dev-chips">${cat.devociones.map(k=>`<button class="${k.id===id?"on":""}" onclick="AJ_DEV='${k.id}';renderAjustes()">${esc(k.short)}</button>`).join("")}</div>`;
+  const avisos=(gl,ics)=>`<div class="group-h">Avisos en tu teléfono</div><div class="group">
+      ${caps.mcp?`<button class="cell action" id="bGcal" onclick="${gl}"><span class="ic" style="background:#4285F4">${I.cal}</span><span class="k">${dev.type==="novena"?((c.creados||[]).length?"Avisos en Google Calendar":"Crear los 9 avisos en Google Calendar"):(st.avisos?"Avisos diarios en Google Calendar":"Crear aviso diario en Google Calendar")}</span>${dev.type==="novena"&&(c.creados||[]).length?`<span class="v" style="color:#8A6411;font-weight:600">${c.creados.length} de 9</span>`:st.avisos&&dev.type!=="novena"?`<span class="v" style="color:#8A6411;font-weight:600">Activo</span>`:I.chev}</button>`:""}
+      ${true?`<button class="cell action" onclick="${ics}"><span class="ic" style="background:var(--noche)">${I.down}</span><span class="k">Añadir al calendario (iPhone, Outlook)</span>${I.chev}</button>`:""}
+      <button class="cell action" onclick="sheetManual('${id}')"><span class="ic" style="background:var(--oro);color:var(--noche)">${I.cal}</span><span class="k">${dev.type==="novena"?"Añadir día por día":"Añadir con un enlace"}</span>${I.chev}</button></div>
+    <div class="foot">Cada aviso suena a la hora elegida y 15 minutos antes.</div>`;
+  let html=`<div class="screen-title">Recordatorios</div>${chips}<div class="sub pad">${esc(dev.title)}${dev.type==="novena"?`, novena #${c.n}`:""}</div>`;
+  if(dev.type==="novena"){
+    if(!c.start){c.start=dev.fixedStart?proximoFijo(dev.fixedStart):hoyStr();await Store.set(id,st)}
+    const e=estado(dev,c);
+    html+=`<div class="group-h">Cuándo rezar</div><div class="group">
+      <label class="cell"><span class="ic" style="background:var(--cenidor)">${I.cal}</span><span class="k">Día primero</span><input type="date" id="fStart" value="${c.start}"></label>
+      <label class="cell"><span class="ic" style="background:var(--rosa)">${I.clock}</span><span class="k">Hora</span><input type="time" id="fHora" value="${st.hora}"></label>
+      <div class="cell"><span class="k">Último día</span><span class="v" id="fFin">${esc(fecha(addDays(parseYmd(c.start),8)))}</span></div></div>
+      ${avisos(`crearEventos('${id}')`,`descargarIcs('${id}')`)}
+      <div class="group-h">Días rezados en esta novena</div>
+      <div class="group">${dev.days.map(d=>`<button class="cell" onclick="toggleDia('${id}',${d.n})"><span class="k">${esc(d.label)}</span><span class="v">${e.done.has(d.n)?"✓ Rezado":"Pendiente"}</span></button>`).join("")}</div>
+      <div class="group" style="margin-top:16px"><button class="cell action" onclick="sheetNuevoCiclo('${id}')"><span class="k" style="color:var(--rosa)">Empezar una nueva novena</span></button></div>`;
+  }else if(dev.type==="coronilla"){
+    html+=`<div class="group-h">Hora habitual</div><div class="group"><label class="cell"><span class="ic" style="background:var(--rosa)">${I.clock}</span><span class="k">Cada día a las</span><input type="time" id="fHora" value="${st.hora}"></label></div>
+      ${avisos(`crearDiarios('${id}')`,`icsDiario('${id}')`)}`;
+  }else{
+    html+=`<div class="group-h">Horas de cada oración</div><div class="group">${dev.days.map(d=>`<label class="cell"><span class="ic" style="background:var(--cenidor)">${I.clock}</span><span class="k">${esc(d.title)}</span><input type="time" data-n="${d.n}" class="fH" value="${st.horas[d.n]||d.hora}"></label>`).join("")}</div>
+      ${avisos(`crearDiarios('${id}')`,`icsDiario('${id}')`)}`;
+  }
+  html+=`<div class="group-h">La app</div><div class="group">
+      <button class="cell action" onclick="compartir()"><span class="ic" style="background:#25D366">${I.heart}</span><span class="k">Compartir Hub de Fe</span>${I.chev}</button>
+      ${IS_STANDALONE?"":`<button class="cell action" onclick="sheetInstalar()"><span class="ic" style="background:var(--noche)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></span><span class="k">Instalar en el teléfono</span>${I.chev}</button>`}
+      <button class="cell action" onclick="buscarActualizacion(true)"><span class="ic" style="background:var(--cenidor)">${I.loop}</span><span class="k">Buscar actualizaciones</span><span class="v">${APP_VERSION}</span></button></div>
+    <div class="foot">Dirección para compartir: <a href="${PUBLIC_URL}" target="_blank" rel="noopener">${PUBLIC_URL.replace("https://","")}</a></div>`;
+  paint(html+`<div style="height:20px"></div>`);
+  const save=async()=>{if($("#fStart"))c.start=$("#fStart").value||hoyStr();if($("#fHora"))st.hora=$("#fHora").value||st.hora;
+    document.querySelectorAll(".fH").forEach(i=>st.horas[i.dataset.n]=i.value||st.horas[i.dataset.n]);
+    await Store.set(id,st);if($("#fFin"))$("#fFin").textContent=fecha(addDays(parseYmd(c.start),8));toast("Guardado")};
+  document.querySelectorAll("#fStart,#fHora,.fH").forEach(i=>i.onchange=save);
+}
+async function toggleDia(id,n){const st=await devState(id),c=cur(st);c.done=c.done.includes(n)?c.done.filter(x=>x!==n):[...c.done,n];c.fin=c.done.length>=9?hoyStr():null;await Store.set(id,st);renderAjustes()}
+const localIso=dt=>ymd(dt)+"T"+String(dt.getHours()).padStart(2,"0")+":"+String(dt.getMinutes()).padStart(2,"0")+":00";
+const fmt=x=>localIso(x).replace(/[-:]/g,"");
+function eventoDia(dev,d,c,hora){
+  const f=addDays(parseYmd(c.start),d.n-1);const[hh,mm]=hora.split(":").map(Number);
+  const ini=new Date(f);ini.setHours(hh,mm,0,0);const fin=new Date(ini.getTime()+(d.mins+5)*60000);
+  const pr=d.blocks.find(b=>b.kind==="practica");
+  return{ini,fin,titulo:`${dev.short}: ${d.label.toLowerCase()}`,desc:`${dev.title}. ${d.label}: ${d.title}.${pr?"\nPráctica: "+pr.paras[0].text:""}\n\nAbre Hub de Fe para rezar con voz guiada.`};
+}
+function eventosDiarios(dev,st){ // uno por oración (o uno para la coronilla), con repetición diaria
+  const items=dev.type==="coronilla"?[{t:dev.title,h:st.hora,m:dev.days[0].mins}]:dev.days.map(d=>({t:d.title,h:st.horas[d.n]||d.hora,m:d.mins}));
+  return items.map(x=>{const[hh,mm]=x.h.split(":").map(Number);let ini=new Date();ini.setHours(hh,mm,0,0);if(ini<new Date())ini=addDays(ini,1);
+    return{ini,fin:new Date(ini.getTime()+(x.m+5)*60000),titulo:x.t,desc:`${x.t}. Abre Hub de Fe para rezar con voz guiada.`}});
+}
+function gcalLink(ev,diario){return "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(ev.titulo)+"&dates="+fmt(ev.ini)+"/"+fmt(ev.fin)+"&details="+encodeURIComponent(ev.desc)+(diario?"&recur="+encodeURIComponent("RRULE:FREQ=DAILY"):"")}
+async function sheetManual(id){const dev=await loadDev(id),st=await devState(id),c=cur(st);
+  const rows=dev.type==="novena"?dev.days.map(d=>`<a class="cell action" style="text-decoration:none;color:inherit" href="${gcalLink(eventoDia(dev,d,c,st.hora))}" target="_blank" rel="noopener"><span class="k">${esc(d.label)}</span><span class="v">${fechaCorta(addDays(parseYmd(c.start),d.n-1))}</span></a>`).join("")
+    :eventosDiarios(dev,st).map(ev=>`<a class="cell action" style="text-decoration:none;color:inherit" href="${gcalLink(ev,true)}" target="_blank" rel="noopener"><span class="k">${esc(ev.titulo)}</span><span class="v">cada día, ${hora12(localIso(ev.ini).slice(11,16))}</span></a>`).join("");
+  openSheet(`<h3>Añadir a Google Calendar</h3><div class="sub">Cada enlace abre Google Calendar con el evento listo.</div><div class="group" style="margin:14px 0 0;background:var(--bg)">${rows}</div>`)}
+const ERR={server_not_connected:"Conecta Google Calendar en claude.ai, en Ajustes > Conectores.",needs_reauth:"Vuelve a conectar Google Calendar en claude.ai, en Ajustes > Conectores.",approval_required:"Aprueba el acceso a Google Calendar cuando claude.ai lo pida.",not_in_manifest:"El acceso a Google Calendar está apagado para esta app.",blocked_by_policy:"Tu organización no permite crear eventos desde aquí."};
+async function crearEventos(id){
+  const dev=await loadDev(id),st=await devState(id),c=cur(st);const b=$("#bGcal");const k=b.querySelector(".k");
+  if(c.creadosKey!==c.start+st.hora){c.creados=[];c.creadosKey=c.start+st.hora}
+  let ok=0;b.disabled=true;
+  try{for(const d of dev.days){const ev=eventoDia(dev,d,c,st.hora);if(ev.fin<new Date()||c.creados.includes(d.n))continue;
+      k.textContent=`Creando ${d.label.toLowerCase()}…`;
+      await caps.mcp.callTool("Google Calendar","create_event",{summary:ev.titulo,description:ev.desc,startTime:localIso(ev.ini),endTime:localIso(ev.fin),overrideReminders:[{method:"popup",minutes:0},{method:"popup",minutes:15}],availability:"AVAILABILITY_FREE"});
+      ok++;c.creados.push(d.n);await Store.set(id,st)}
+    toast(ok?`Listo: ${ok} avisos en tu Google Calendar`:"Los avisos ya estaban creados");
+  }catch(e){toast((ERR[e&&e.code]||"No se pudieron crear todos. Revisa tu calendario antes de intentarlo otra vez.")+(ok?` Se crearon ${ok}.`:""),6000)}
+  renderAjustes();
+}
+async function crearDiarios(id){
+  const dev=await loadDev(id),st=await devState(id);const b=$("#bGcal");const k=b.querySelector(".k");
+  const key=JSON.stringify(dev.type==="coronilla"?st.hora:st.horas);
+  if(st.avisos===key){toast("Ese aviso diario ya está en tu calendario");return}
+  b.disabled=true;let ok=0;
+  try{for(const ev of eventosDiarios(dev,st)){k.textContent=`Creando: ${ev.titulo}…`;
+      await caps.mcp.callTool("Google Calendar","create_event",{summary:ev.titulo,description:ev.desc,startTime:localIso(ev.ini),endTime:localIso(ev.fin),recurrenceData:["RRULE:FREQ=DAILY"],overrideReminders:[{method:"popup",minutes:0}],availability:"AVAILABILITY_FREE"});ok++}
+    st.avisos=key;await Store.set(id,st);toast(`Listo: ${ok} ${ok===1?"aviso diario":"avisos diarios"} en tu Google Calendar`);
+  }catch(e){toast((ERR[e&&e.code]||"No se pudo crear. Revisa tu calendario antes de intentarlo otra vez.")+(ok?` Se crearon ${ok}.`:""),6000)}
+  renderAjustes();
+}
+function icsText(evs,{rrule=false,alarms=[0,15]}={}){
+  const q=s=>s.replace(/\\/g,"\\\\").replace(/\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");
+  const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Hub de Fe//ES","CALSCALE:GREGORIAN"];
+  evs.forEach((ev,i)=>{L.push("BEGIN:VEVENT","UID:"+uid()+i+"@hubdefe","DTSTAMP:"+fmt(new Date()),"DTSTART:"+fmt(ev.ini),"DTEND:"+fmt(ev.fin),"SUMMARY:"+q(ev.titulo),"DESCRIPTION:"+q(ev.desc));
+    if(rrule)L.push("RRULE:FREQ=DAILY");alarms.forEach(a=>L.push("BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+q(ev.titulo),"TRIGGER:"+(a?"-PT"+a+"M":"PT0M"),"END:VALARM"));L.push("END:VEVENT")});
+  L.push("END:VCALENDAR");return L.join("\r\n");
+}
+async function descargarIcs(id){const dev=await loadDev(id),st=await devState(id),c=cur(st);
+  try{await guardarArchivo(`${id}-${c.n}.ics`,icsText(dev.days.map(d=>eventoDia(dev,d,c,st.hora))));toast("Abre el archivo para añadir los 9 avisos")}catch(e){toast("Descarga cancelada")}}
+async function icsDiario(id){const dev=await loadDev(id),st=await devState(id);
+  try{await guardarArchivo(`${id}-diario.ics`,icsText(eventosDiarios(dev,st),{rrule:true,alarms:[0]}));toast("Abre el archivo para añadir los avisos diarios")}catch(e){toast("Descarga cancelada")}}
+
+/* ================= Hoja inferior ================= */
+function openSheet(html){$("#sheet").innerHTML='<button class="grab" aria-label="Cerrar" onclick="closeSheet()"></button><button class="sheet-x" aria-label="Cerrar" onclick="closeSheet()">×</button>'+html;$("#scrim").classList.add("on");$("#sheet").classList.add("on")}
+function closeSheet(){$("#scrim").classList.remove("on");$("#sheet").classList.remove("on")}
+$("#scrim").onclick=closeSheet;document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
+
+/* ================= Reproductor ================= */
+const aud=$("#aud");
+const SEC={credo:"Credo",oracion_todos:"Oración",oracion_virgen:"A la Virgen",intenciones:"Intenciones",oracion_virgen_fin:"A la Virgen",padrenuestro:"Padre Nuestro",lectura:"Lectura",ejemplo:"Ejemplo",practica:"Práctica",gozos:"Gozos",oracion_nino:"Oración final",
+  senal:"Inicio",glorias:"Oración",aves:"A la Virgen",oracion_jose:"San José",pn_ave_gloria:"Padre Nuestro",cierre:"Oración final",
+  inicio:"Inicio",oh_sangre:"Inicio",pn_ave_credo:"Credo",santo_dios:"Final",oracion_final:"Final",confio:"Final",
+  alabanzas:"Alabanzas",virgen:"A la Virgen",oracion_sangre:"Sangre de Cristo",sellamiento:"Sellamiento",al_senor:"Oración final",
+  contricion:"Inicio",inicial:"Inicio",decena:"Decena",oracion_nudos:"A la Virgen",consagracion:"Consagración"};
+const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],ri:0,tk:0,big:0,lastTab:"hoy",elapsedBefore:[],total:0,
+  reset(){if(!this.playing){this.meta=null;$("#mini").classList.add("off");syncMini()}},
+  async load(id,n){
+    const dev=await loadDev(id),day=dev.days.find(d=>d.n===n),st=await devState(id),c=cur(st);
+    const ints=dev.type==="diaria"?[]:activas(c).map(x=>x.texto);
+    const blocks=[];for(const k of dev.order){if(k==="@day")day.blocks.forEach(b=>blocks.push([b.kind,b]));else if(k==="@intenciones")blocks.push(["intenciones",{kind:"intenciones",title:"Intenciones",paras:[]}]);else blocks.push([k,dev.common[k]])}
+    this.items=[];this.sections=[];let html="";
+    blocks.forEach(([key,b])=>{
+      let label=SEC[key]||b.title;if(b.kind==="lectura")label=dev.lecturaLabel||"Lectura";if(b.kind==="reflexion")label="Reflexión";if(b.kind==="decena")label=b.title.split(" ")[0];if(dev.type==="diaria")label=b.title;
+      const last=this.sections[this.sections.length-1];
+      if(!last||last.label!==label)this.sections.push({label,start:this.items.length});
+      const secTitle=b.title||"Oración";
+      if(b.kind==="intenciones"){
+        const idx=this.items.length;
+        html+=`<div class="ly-int" id="ly${idx}" data-i="${idx}"><div class="h">Intenciones de esta ${u(dev)}</div>${ints.length?`<ul>${ints.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:`<div style="opacity:.8;margin-top:6px">Pide en silencio las gracias que deseas.</div>`}<div class="cd" id="cd${idx}">Un momento de silencio para tus peticiones</div></div>`;
+        this.items.push({kind:"pausa",title:"Intenciones",texts:ints,secs:15,cd:"cd"+idx,dur:(ints.join(" ").length/14)+15});return;
+      }
+      if(b.title)html+=`<div class="ly head">${esc(b.kind==="lectura"&&dev.type==="novena"&&dev.id==="divino-nino"?day.label+": "+b.title:b.title)}</div>`;
+      if(b.intro)this.items.push({kind:"audio",src:b.intro.audio,dur:b.intro.dur||3,title:secTitle,el:null});
+      b.paras.forEach(pp=>{const idx=this.items.length,rep=pp.rep||1;
+        html+=`<p class="ly ${b.verse?"verse":""}" id="ly${idx}" data-i="${idx}">${esc(pp.text)}${rep>1?`<span class="beads" id="bd${idx}">${Array.from({length:rep},()=>"<i></i>").join("")}</span>`:""}</p>`;
+        for(let r=0;r<rep;r++)this.items.push({kind:"audio",src:pp.audio,dur:pp.dur||5,title:secTitle,el:"ly"+idx,bead:rep>1?{id:"bd"+idx,k:r}:null});
+        if(pp.pause){const pi=this.items.length;html+=`<div class="ly-pause" id="ly${pi}" data-i="${pi}"><span id="cd${pi}">Silencio</span></div>`;this.items.push({kind:"pausa",title:secTitle,texts:[],secs:pp.pause,cd:"cd"+pi,el:"ly"+pi,dur:pp.pause})}
+      });
+    });
+    let acc=0;this.elapsedBefore=this.items.map(it=>{const a=acc;acc+=it.dur;return a});this.total=acc;
+    this.meta={id,n,cn:c.n,type:dev.type,dev:dev.title,label:day.label,title:day.title,img:day.img};
+    $("#lyrics").innerHTML=html;
+    $("#lyrics").querySelectorAll("[data-i]").forEach(el=>el.onclick=()=>this.jump(+el.dataset.i));
+    $("#chips").innerHTML=this.sections.map((s,k)=>`<button class="chip" data-k="${k}">${esc(s.label)}</button>`).join("");
+    $("#chips").querySelectorAll(".chip").forEach(ch=>ch.onclick=()=>this.jump(this.sections[+ch.dataset.k].start));
+    $("#pImg").src=day.img;$("#pBg").style.backgroundImage=`url(${day.img})`;
+    $("#pDev").textContent=dev.type==="diaria"?dev.title:`${dev.short}, ${u(dev)} #${c.n}`;
+    $("#pDay").textContent=dev.type==="novena"?day.label:day.title;$("#pTitle").textContent=dev.type==="novena"?day.title:dev.type==="coronilla"?(ints[0]||"Por la misericordia de Dios"):day.label;
+    $("#miniImg").src=day.img;$("#doneView").classList.remove("on");
+    if(P.big){const s=[21,24,27][P.big];document.querySelectorAll(".ly:not(.head)").forEach(e=>e.style.fontSize=(e.classList.contains("verse")?s+2:s)+"px")}
+    this.i=0;this.ui();this.media();
+  },
+  stop(){this.tk++;this.playing=false;aud.pause();clearInterval(this.cd);try{caps.tts&&caps.tts.stop()}catch(e){}try{speechSynthesis.cancel()}catch(e){}this.ui()},
+  toggle(){this.playing?this.stop():this.play()},
+  play(){if(!this.items.length)return;if(this.i>=this.items.length)this.i=0;this.playing=true;$("#doneView").classList.remove("on");this.ui();this.run()},
+  jump(i){this.stop();this.i=Math.max(0,Math.min(i,this.items.length-1));this.play()},
+  async run(){const tk=++this.tk;
+    while(this.playing&&tk===this.tk&&this.i<this.items.length){
+      const it=this.items[this.i];this.focus();this.ui();
+      try{it.kind==="audio"?await this.audio(it.src,tk):await this.pausa(it,tk)}catch(e){if(tk!==this.tk)return}
+      if(tk!==this.tk)return;this.i++}
+    if(tk===this.tk&&this.i>=this.items.length){this.playing=false;this.i=this.items.length;this.ui();finRezo()}
+  },
+  audio(src,tk){return new Promise((res,rej)=>{
+    if(!aud.src.endsWith(src))aud.src=src;else aud.currentTime=0;aud.playbackRate=this.rates[this.ri];
+    const done=()=>{cl();res()},fail=()=>{cl();rej(new Error("audio"))};
+    const cl=()=>{aud.removeEventListener("ended",done);aud.removeEventListener("error",fail);clearInterval(w)};
+    const w=setInterval(()=>{if(tk!==this.tk){cl();res()}},250);
+    aud.addEventListener("ended",done);aud.addEventListener("error",fail);
+    const pr=aud.play();if(pr&&pr.catch)pr.catch(err=>{cl();this.playing=false;this.ui();toast("Toca el botón de reproducir para escuchar");rej(err)});
+    const nx=this.items[this.i+1];if(nx&&nx.src&&nx.src!==src){const a=new Audio();a.preload="auto";a.src=nx.src}
+  })},
+  async pausa(it,tk){const cd=$("#"+it.cd);
+    if(it.texts.length){cd.textContent="Presentando tus intenciones…";await speakEs("Te presentamos nuestras intenciones. "+it.texts.join(". ")+".",tk,this.rates[this.ri]);if(tk!==this.tk)return}
+    let s=it.secs;await new Promise(res=>{
+      const draw=()=>{cd.innerHTML=`Silencio: <strong>${s}</strong> s <button class="skip" id="skipP">Continuar</button>`;const b=$("#skipP");if(b)b.onclick=ev=>{ev.stopPropagation();clearInterval(this.cd);res()}};
+      draw();this.cd=setInterval(()=>{if(tk!==this.tk){clearInterval(this.cd);return res()}s--;if(s<=0){clearInterval(this.cd);return res()}draw()},1000)});
+    cd.textContent=it.texts.length||it.title==="Intenciones"?"Un momento de silencio para tus peticiones":"Silencio"},
+  focus(){
+    document.querySelectorAll("#lyrics .now").forEach(e=>e.classList.remove("now"));
+    const it=this.items[this.i];let el=null;
+    if(it&&it.el)el=document.getElementById(it.el);else for(let k=this.i;k<this.items.length&&k<this.i+2;k++){el=document.getElementById("ly"+k)||(this.items[k]&&this.items[k].el&&document.getElementById(this.items[k].el));if(el)break}
+    if(!el&&it&&it.kind==="pausa")el=$("#"+it.cd)&&$("#"+it.cd).closest("[data-i]");
+    if(it&&it.bead){document.querySelectorAll("#"+it.bead.id+" i").forEach((b,k)=>{b.classList.toggle("on",k<it.bead.k);b.classList.toggle("cur",k===it.bead.k)})}
+    if(el){el.classList.add("now");const L=$("#lyrics");L.scrollTo({top:el.offsetTop-L.clientHeight*.32,behavior:"smooth"})}
+  },
+  ui(){
+    const pi=this.playing?I.pause:I.play;$("#pPlay").innerHTML=pi;$("#miniPP").innerHTML=pi;
+    $("#pPlay").setAttribute("aria-label",this.playing?"Pausar":"Reproducir");
+    const it=this.items[Math.min(this.i,this.items.length-1)];
+    const el=this.i<this.items.length?(this.elapsedBefore[this.i]||0):this.total;const pct=this.total?el/this.total*100:0;
+    $("#pBar").style.width=pct+"%";$("#miniProg").style.width=pct+"%";
+    $("#tA").textContent=mmss(el);$("#tB").textContent="-"+mmss(Math.max(0,this.total-el));
+    $("#pSec").textContent=it?(it.bead?`${it.title} · ${it.bead.k+1} de ${document.querySelectorAll("#"+it.bead.id+" i").length}`:it.title):"";
+    $("#pSpeed").textContent=String(this.rates[this.ri]).replace(".",",")+"×";
+    if(this.meta){$("#miniA").textContent=this.meta.type==="novena"?this.meta.label+": "+this.meta.title:this.meta.title;$("#miniB").textContent=it?it.title:""}
+    let curS=0;this.sections.forEach((s,k)=>{if(this.i>=s.start)curS=k});
+    $("#chips").querySelectorAll(".chip").forEach((ch,k)=>{ch.classList.toggle("on",k===curS&&this.i<this.items.length);ch.classList.toggle("done",k<curS)});
+    const on=$("#chips .chip.on");if(on&&$("#player").classList.contains("open")){const C=$("#chips");C.scrollTo({left:on.offsetLeft-C.clientWidth/2+on.clientWidth/2,behavior:"smooth"})}
+    if("mediaSession" in navigator)navigator.mediaSession.playbackState=this.playing?"playing":"paused";
+  },
+  media(){if(!("mediaSession" in navigator)||!this.meta)return;try{
+    navigator.mediaSession.metadata=new MediaMetadata({title:this.meta.type==="novena"?this.meta.label+": "+this.meta.title:this.meta.title,artist:this.meta.dev,album:"Hub de Fe",artwork:[{src:new URL(this.meta.img,location.href).href,sizes:"512x512",type:"image/jpeg"}]});
+    navigator.mediaSession.setActionHandler("play",()=>this.play());navigator.mediaSession.setActionHandler("pause",()=>this.stop());
+    navigator.mediaSession.setActionHandler("nexttrack",()=>this.jump(this.i+1));navigator.mediaSession.setActionHandler("previoustrack",()=>this.jump(this.i-1))}catch(e){}}
+};
+async function openPlayer(id,n){
+  const dev=await loadDev(id);
+  if(dev.type==="coronilla"&&!(P.meta&&P.meta.id===id&&(P.playing||P.i>0&&P.i<P.items.length))){
+    const st=await devState(id);let c=cur(st);
+    if(c.fin){st.ciclos.push(mkCiclo(c.n+1,hoyStr()));await Store.set(id,st);c=cur(st);P.meta=null}
+    if(!activas(c).length&&P.asked!==id+c.n){P.asked=id+c.n;return sheetIntencionAntes(id,n)}
+  }
+  if(!P.meta||P.meta.id!==id||P.meta.n!==n){P.stop();await P.load(id,n)}
+  $("#player").classList.add("open");$("#mini").classList.add("off");syncMini();setTimeout(()=>P.focus(),450);
+}
+function sheetIntencionAntes(id,n){
+  openSheet(`<h3>¿Por qué intención rezas?</h3><div class="sub">Cada coronilla lleva su motivo. Se presentará al empezar.</div>
+    <textarea id="antesTx" placeholder="Rezo esta coronilla por…" maxlength="400"></textarea>
+    <button class="btn-p" onclick="antesOk('${id}',${n},true)">Empezar a rezar</button>
+    <button class="btn-p ghost" onclick="antesOk('${id}',${n},false)">Rezar sin escribir intención</button>`);
+  setTimeout(()=>$("#antesTx")&&$("#antesTx").focus(),350);
+}
+async function antesOk(id,n,usar){const t=($("#antesTx").value||"").trim();
+  if(usar&&t){const st=await devState(id);cur(st).intenciones.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null});await Store.set(id,st)}
+  closeSheet();P.meta=null;if(location.hash!=="#"+id+"-dia-"+n)location.hash=id+"-dia-"+n;else openPlayer(id,n)}
+function closePlayer(nav=true){
+  if(!$("#player").classList.contains("open"))return;
+  $("#player").classList.remove("open");
+  if(P.meta&&(P.playing||P.i>0&&P.i<P.items.length))$("#mini").classList.remove("off");
+  syncMini();if(nav)go(P.lastTab||"hoy");
+}
+function syncMini(){$("#app").classList.toggle("has-mini",!$("#mini").classList.contains("off"))}
+window.addEventListener("hashchange",()=>{const r=parseHash();if(!r.day)P.lastTab=r.tab||(r.nov||"hoy")});
+$("#pClose").onclick=()=>closePlayer(true);
+$("#pPlay").onclick=()=>P.toggle();
+$("#pPrev").onclick=()=>P.jump(P.i-1);
+$("#pNext").onclick=()=>P.jump(P.i+1);
+$("#pSpeed").onclick=()=>{P.ri=(P.ri+1)%P.rates.length;aud.playbackRate=P.rates[P.ri];P.ui()};
+$("#pView").onclick=()=>$("#player").classList.toggle("cover");
+$("#pText").onclick=()=>{P.big=(P.big+1)%3;const s=[21,24,27][P.big];document.querySelectorAll(".ly:not(.head)").forEach(e=>e.style.fontSize=(e.classList.contains("verse")?s+2:s)+"px");P.focus()};
+$("#mini").onclick=e=>{if(e.target.closest("#miniPP")){e.stopPropagation();P.toggle();return}go(P.meta.id+"-dia-"+P.meta.n)};
+
+async function finRezo(){
+  const{id,n,type}=P.meta;const dev=await loadDev(id),st=await devState(id),c=cur(st);let html;
+  if(type==="novena"){
+    if(!c.done.includes(n))c.done.push(n);if(!c.start)c.start=ymd(addDays(new Date(),-(n-1)));
+    if(c.done.length>=dev.days.length&&!c.fin)c.fin=hoyStr();
+    await Store.set(id,st);Lit.add(n);const e=estado(dev,c);
+    const pr=dev.days.find(d=>d.n===n).blocks.find(b=>b.kind==="practica");
+    html=`${custodia(dev,e,{size:200})}<h2>${e.completa?`¡Novena #${c.n} completada!`:esc(P.meta.label)+" rezado"}</h2>
+      <p>${e.completa?"Los nueve rayos están encendidos. Gracias, Señor.":`Se encendió un rayo más. Te quedan ${e.total-e.done.size} ${e.total-e.done.size===1?"día":"días"}.`}</p>
+      ${e.completa?`<button class="btn-w" onclick="closePlayer(false);sheetNuevoCiclo('${id}')">Empezar una nueva novena</button><button class="btn-o" onclick="closePlayer(true)">Ahora no</button>`:`<button class="btn-w" onclick="closePlayer(true)">Volver al inicio</button>`}
+      ${pr&&!e.completa?`<p style="margin-top:22px;font-family:var(--read);font-style:italic;font-size:15px">Práctica: ${esc(pr.paras[0].text)}</p>`:""}`;
+  }else if(type==="coronilla"){
+    c.done=[1];c.fin=hoyStr();await Store.set(id,st);
+    const ints=c.intenciones.map(x=>x.texto);
+    html=`${medalla(dev.cover,170)}<h2>Coronilla #${c.n} rezada</h2><p>${ints.length?"Por: "+esc(ints.join("; ")):"Jesús, en ti confío."}</p><button class="btn-w" onclick="closePlayer(true)">Volver al inicio</button>`;
+  }else{
+    if(!st.hoy.done.includes(n))st.hoy.done.push(n);await Store.set(id,st);
+    const sig=dev.days.find(d=>!st.hoy.done.includes(d.n));
+    html=`${medalla(P.meta.img,170)}<h2>${esc(P.meta.title)}: rezada</h2><p>${sig?`Más tarde: ${esc(sig.title.toLowerCase())}, a las ${hora12(st.horas[sig.n]||sig.hora)}.`:"Completaste las oraciones de hoy. Que descanses en paz."}</p><button class="btn-w" onclick="closePlayer(true)">Volver al inicio</button>`;
+  }
+  $("#doneView").innerHTML=html;$("#doneView").classList.add("on");$("#mini").classList.add("off");syncMini();
+}
+
+/* Voz de las intenciones (texto del usuario) */
+async function speakEs(text,tk,rate){
+  if(caps.tts){try{await caps.tts.speak(text,{voice:"airy",rate:Math.max(.7,Math.min(1.5,rate*.95))});return}catch(e){if(tk!==P.tk)return}}
+  if("speechSynthesis" in window){await new Promise(res=>{const ut=new SpeechSynthesisUtterance(text);ut.lang="es-ES";ut.rate=.95*rate;
+    const vs=speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang));ut.voice=vs.find(v=>/natural|neural|premium|enhanced|paulina|m[oó]nica|helena|google/i.test(v.name))||vs[0]||null;
+    ut.onend=res;ut.onerror=res;speechSynthesis.speak(ut);const k=setInterval(()=>{if(tk!==P.tk){speechSynthesis.cancel();clearInterval(k);res()}},300)})}
+}
+
+
+/* ================= App instalable: compartir, instalar, actualizar ================= */
+const APP_VERSION="2026.11.17-6c59d9";
+const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
+const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
+const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const UA=navigator.userAgent;const IS_IOS=/iPhone|iPad|iPod/.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1);const IS_ANDROID=/Android/.test(UA);
+let installEvt=null;window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;if(TAB==="hoy"&&!parseHash().day)renderHoy()});
+window.addEventListener("appinstalled",()=>{installEvt=null;toast("Hub de Fe quedó instalada en tu teléfono")});
+const shareUrl=(hash="")=>(IN_CLAUDE||location.protocol==="file:"?PUBLIC_URL:location.origin+location.pathname)+(hash?"#"+hash:"");
+async function compartir(hash="",texto="Te comparto Hub de Fe: novenas, la coronilla y oraciones de cada día con voz guiada. Ábrela y, si quieres, instálala en tu teléfono."){
+  const url=shareUrl(hash);
+  if(navigator.share&&!IN_CLAUDE){try{await navigator.share({title:"Hub de Fe",text:texto,url});return}catch(e){if(e&&e.name==="AbortError")return}}
+  const msg=encodeURIComponent(texto+" "+url);
+  openSheet(`<h3>Compartir Hub de Fe</h3><div class="sub">Envíala a quien quieras, en cualquier país. Se abre en cualquier teléfono o computadora.</div>
+    <div class="share-grid">
+      <a href="https://wa.me/?text=${msg}" target="_blank" rel="noopener"><span class="sic" style="background:#25D366"><svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.6-.1-.4-.1-.8-.3-1.4-.5-2.5-1.1-4.1-3.6-4.2-3.8-.1-.2-1-1.3-1-2.5s.6-1.8.9-2c.2-.2.5-.3.6-.3h.5c.2 0 .4 0 .6.4l.8 1.9c.1.1.1.3 0 .5l-.3.4-.4.4c-.1.1-.3.3-.1.6.2.3.7 1.1 1.4 1.8.9.8 1.7 1.1 2 1.2.3.1.4.1.6-.1l.8-1c.2-.3.4-.2.6-.1l1.8.9c.3.1.4.2.5.3.1.2.1.7-.1 1.3z"/></svg></span>WhatsApp</a>
+      <a href="https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(texto)}" target="_blank" rel="noopener"><span class="sic" style="background:#2AABEE"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M21.9 4.3 18.8 19c-.2 1-.8 1.3-1.7.8l-4.6-3.4-2.2 2.1c-.2.2-.5.5-1 .5l.3-4.7 8.6-7.8c.4-.3-.1-.5-.6-.2L7 13l-4.6-1.4c-1-.3-1-1 .2-1.5l17.9-6.9c.8-.3 1.6.2 1.4 1.1z"/></svg></span>Telegram</a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}" target="_blank" rel="noopener"><span class="sic" style="background:#1877F2"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M14 8h3V4h-3c-2.8 0-4 1.8-4 4v2H7v4h3v8h4v-8h3l1-4h-4V8.5c0-.3.2-.5.5-.5z"/></svg></span>Facebook</a>
+      <button onclick="copiarEnlace('${url}')"><span class="sic" style="background:var(--noche)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></span>Copiar enlace</button>
+    </div>
+    <div class="linkbox" id="lnk">${esc(url)}</div>
+    <div class="pick-h" style="text-align:center">O muestra este código para que lo escaneen con la cámara</div><div class="qr" id="qr"></div>`);
+  pintarQR(url);
+}
+async function copiarEnlace(url){try{await navigator.clipboard.writeText(url);toast("Enlace copiado")}catch(e){const r=document.createRange();r.selectNodeContents($("#lnk"));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);toast("Selecciona y copia el enlace")}}
+function pintarQR(url){const go=()=>{try{const q=qrcode(0,"M");q.addData(url);q.make();$("#qr").innerHTML=q.createImgTag(6,0)}catch(e){}};
+  if(window.qrcode)return go();const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js";sc.onload=go;document.head.appendChild(sc)}
+const ICON_SHARE_IOS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg>';
+const ICON_PLUSBOX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+const ICON_DOTS='<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+function sheetInstalar(os){
+  os=os||(IS_IOS?"ios":"android");
+  const pub=`<a href="${PUBLIC_URL}" target="_blank" rel="noopener">${PUBLIC_URL.replace("https://","")}</a>`;
+  const ios=`<ol class="steps">
+      <li><span>Abre ${IN_CLAUDE?pub:"esta página"} en <b>Safari</b>. En iPhone, solo Safari permite instalarla.</span></li>
+      <li><span>Toca el botón <span class="kbd">${ICON_SHARE_IOS}Compartir</span>, abajo en el centro (en iPad, arriba).</span></li>
+      <li><span>Desliza hacia abajo y toca <span class="kbd">${ICON_PLUSBOX}Agregar a pantalla de inicio</span>.</span></li>
+      <li><span>Toca <b>Agregar</b>. El ícono de Hub de Fe aparecerá con tus apps.</span></li></ol>`;
+  const and=`${installEvt?`<button class="btn-p" onclick="instalarYa()">Instalar ahora</button>`:""}
+    <ol class="steps">
+      <li><span>Abre ${IN_CLAUDE?pub:"esta página"} en <b>Chrome</b>.</span></li>
+      <li><span>Toca el menú <span class="kbd">${ICON_DOTS}</span>, arriba a la derecha.</span></li>
+      <li><span>Toca <b>Instalar aplicación</b> o <b>Agregar a la pantalla principal</b>.</span></li>
+      <li><span>Confirma con <b>Instalar</b>. Hub de Fe aparecerá en tu pantalla de inicio.</span></li></ol>`;
+  openSheet(`<h3>Instalar Hub de Fe</h3><div class="sub">Funciona como una app: abre a pantalla completa, guarda tus intenciones en el teléfono y sigue sonando sin internet una vez escuchado cada día.</div>
+    <div class="os-tabs"><button class="${os==="ios"?"on":""}" onclick="sheetInstalar('ios')">iPhone y iPad</button><button class="${os==="android"?"on":""}" onclick="sheetInstalar('android')">Android</button></div>
+    ${os==="ios"?ios:and}
+    <div class="foot" style="padding:14px 4px 0">Las actualizaciones llegan solas: cuando haya una nueva versión verás un aviso para aplicarla.</div>`);
+}
+async function instalarYa(){if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;closeSheet()}
+function cerrarBannerInstalar(){try{localStorage.setItem("hubdefe:noBanner","1")}catch(e){}const b=$("#instBanner");if(b)b.remove()}
+const bannerInstalar=()=>{let off=false;try{off=localStorage.getItem("hubdefe:noBanner")==="1"}catch(e){}
+  if(IS_STANDALONE||off)return"";return `<div class="install-banner" id="instBanner"><img src="icons/icon-192.png" alt=""><span onclick="sheetInstalar()" style="cursor:pointer"><b>Instala Hub de Fe</b><small>Tenla en tu teléfono como una app</small></span><button class="x2" aria-label="Cerrar" onclick="cerrarBannerInstalar()">×</button></div>`};
+/* Guardar archivos (.ics) dentro o fuera de Claude */
+async function guardarArchivo(filename,data,mime="text/calendar"){
+  if(caps.downloads){await caps.downloads.save({filename,data});return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:mime}));a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
+}
+/* Service worker: modo sin conexión y aviso de nueva versión */
+let swReg=null;
+function avisoActualizacion(w){if($("#updBar"))return;const d=document.createElement("div");d.className="update-bar";d.id="updBar";
+  d.innerHTML='Hay una nueva versión de Hub de Fe <button>Actualizar</button>';d.querySelector("button").onclick=()=>{w.postMessage("skipWaiting")};$("#app").appendChild(d)}
+async function buscarActualizacion(manual){if(!swReg){if(manual)toast(IN_CLAUDE?"Dentro de Claude siempre ves la última versión":"Las actualizaciones no están disponibles en este navegador");return}
+  try{await swReg.update()}catch(e){}if(swReg.waiting)avisoActualizacion(swReg.waiting);else if(manual)toast("Ya tienes la última versión ("+APP_VERSION+")")}
+if("serviceWorker" in navigator&&!IN_CLAUDE&&(location.protocol==="https:"||location.hostname==="localhost")){
+  navigator.serviceWorker.register("sw.js").then(reg=>{swReg=reg;
+    if(reg.waiting&&navigator.serviceWorker.controller)avisoActualizacion(reg.waiting);
+    reg.addEventListener("updatefound",()=>{const w=reg.installing;w&&w.addEventListener("statechange",()=>{if(w.state==="installed"&&navigator.serviceWorker.controller)avisoActualizacion(w)})});
+    setInterval(()=>reg.update().catch(()=>{}),60*60*1000);
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")reg.update().catch(()=>{})});
+  }).catch(()=>{});
+  let recargado=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(recargado)return;recargado=true;location.reload()});
+}
+
+/* ================= Arranque ================= */
+(async()=>{
+  await onRoute();
+  await Promise.all(["tts","mcp","downloads"].map(async n=>{try{caps[n]=await claude.use(n)}catch(e){caps[n]=null}}));
+  await Store.init();
+  if(Store.db)Store.cache={};
+  if(!parseHash().day)onRoute();else badge();
+})();
+</script>
+
+
+</body>
+</html>
