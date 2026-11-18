@@ -187,6 +187,9 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .mini .a{font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mini .b{font-size:12.5px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mini .pp{width:44px;height:44px;border-radius:50%;background:var(--oro);color:var(--noche);display:grid;place-items:center;flex:none}
+.mini .mx{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;color:#fff;background:rgba(255,255,255,.12)}
+.mini .mx:active{background:rgba(255,255,255,.25)}
+.app.has-mini .fab{bottom:calc(var(--tabh) + var(--safe-b) + 92px)}
 .mini .prog{position:absolute;left:16px;right:16px;bottom:3px;height:2px;border-radius:1px;background:rgba(255,255,255,.15);overflow:hidden}
 .mini .prog i{display:block;height:100%;background:var(--oro);width:0}
 
@@ -445,6 +448,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
     <img id="miniImg" alt="">
     <span class="i"><span class="a" id="miniA"></span><span class="b" id="miniB"></span></span>
     <span class="pp" id="miniPP" role="button" aria-label="Reproducir o pausar"></span>
+    <span class="mx" id="miniX" role="button" aria-label="Cerrar el reproductor"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
     <span class="prog"><i id="miniProg"></i></span>
   </button>
 
@@ -1115,6 +1119,9 @@ function closePlayer(nav=true){
   if(P.meta&&(P.playing||P.i>0&&P.i<P.items.length))$("#mini").classList.remove("off");
   syncMini();if(nav)go(P.lastTab||"hoy");
 }
+/* Cerrar la barra: detiene el rezo y la quita. El día sigue pendiente en «Para hoy» y se retoma desde ahí. */
+function cerrarMini(){if(P.playing)P.toggle();try{aud.pause()}catch(e){}P.tk=(P.tk||0)+1;P.meta=null;$("#mini").classList.add("off");syncMini();
+  if(TAB==="hoy")renderHoy();toast("Rezo detenido. Lo encuentras en Inicio cuando quieras seguir",2600,true)}
 function syncMini(){$("#app").classList.toggle("has-mini",!$("#mini").classList.contains("off"))}
 window.addEventListener("hashchange",()=>{const r=parseHash();if(!r.day)P.lastTab=r.tab||(r.nov||"hoy")});
 $("#pClose").onclick=()=>closePlayer(true);
@@ -1150,7 +1157,7 @@ async function probarVel(){ // si ya está sonando un rezo, se oye ahí mismo; s
 $("#pView").onclick=()=>$("#player").classList.toggle("cover");
 $("#pImgBtn").onclick=()=>{const on=$("#player").classList.toggle("cover");$("#pImgBtn").setAttribute("aria-label",on?"Volver al texto":"Ver la imagen en grande")};
 $("#pText").onclick=()=>{P.big=(P.big+1)%3;const s=[21,24,27][P.big];document.querySelectorAll(".ly:not(.head)").forEach(e=>e.style.fontSize=(e.classList.contains("verse")?s+2:s)+"px");P.focus()};
-$("#mini").onclick=e=>{if(e.target.closest("#miniPP")){e.stopPropagation();P.toggle();return}go(P.meta.id+"-dia-"+P.meta.n)};
+$("#mini").onclick=e=>{if(e.target.closest("#miniX")){e.stopPropagation();cerrarMini();return}if(e.target.closest("#miniPP")){e.stopPropagation();P.toggle();return}go(P.meta.id+"-dia-"+P.meta.n)};
 
 async function finRezo(){
   const{id,n,type}=P.meta;const dev=await loadDev(id),st=await devState(id),c=cur(st);let html;
@@ -1189,7 +1196,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.18-0e3df1";
+const APP_VERSION="2026.11.18-d452ab";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
