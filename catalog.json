@@ -1,6 +1,33 @@
 {
  "devociones": [
   {
+   "id": "rosario",
+   "type": "rosario",
+   "title": "Santo Rosario",
+   "short": "Santo Rosario",
+   "subtitle": "Cinco misterios de la vida de Jesús y de María",
+   "cover": "img/rosario.jpg",
+   "days": 4
+  },
+  {
+   "id": "coronilla",
+   "type": "coronilla",
+   "title": "Coronilla de la Divina Misericordia",
+   "short": "Coronilla",
+   "subtitle": "Cinco decenas por la misericordia de Dios. Tradicionalmente, a las 3 de la tarde",
+   "cover": "img/coronilla.jpg",
+   "days": 1
+  },
+  {
+   "id": "diarias",
+   "type": "diaria",
+   "title": "Oraciones de cada día",
+   "short": "Cada día",
+   "subtitle": "Mañana, Ángelus y noche",
+   "cover": "img/diarias.jpg",
+   "days": 3
+  },
+  {
    "id": "divino-nino",
    "type": "novena",
    "title": "Novena Bíblica al Divino Niño Jesús",
@@ -35,24 +62,6 @@
    "subtitle": "María, la que desata los nudos de nuestra vida",
    "cover": "img/nudos.jpg",
    "days": 9
-  },
-  {
-   "id": "coronilla",
-   "type": "coronilla",
-   "title": "Coronilla de la Divina Misericordia",
-   "short": "Coronilla",
-   "subtitle": "Cinco decenas por la misericordia de Dios. Tradicionalmente, a las 3 de la tarde",
-   "cover": "img/coronilla.jpg",
-   "days": 1
-  },
-  {
-   "id": "diarias",
-   "type": "diaria",
-   "title": "Oraciones de cada día",
-   "short": "Cada día",
-   "subtitle": "Mañana, Ángelus y noche",
-   "cover": "img/diarias.jpg",
-   "days": 3
   }
  ]
 }

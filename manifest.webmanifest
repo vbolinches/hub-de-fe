@@ -1,7 +1,7 @@
 {
   "name": "Hub de Fe",
   "short_name": "Hub de Fe",
-  "description": "Novenas, coronilla y oraciones de cada día con voz guiada, tus intenciones y recordatorios.",
+  "description": "Santo Rosario, novenas, coronilla y oraciones de cada día con voz guiada, tus intenciones y recordatorios.",
   "lang": "es",
   "start_url": "./#hoy",
   "scope": "./",
