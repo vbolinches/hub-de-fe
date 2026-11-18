@@ -265,7 +265,10 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 @media (prefers-color-scheme:dark){.btn-p{background:var(--oro);color:var(--noche)}}
 .btn-p:disabled{opacity:.45}
 .sugs{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.sugs button{padding:7px 12px;border-radius:14px;background:var(--surface-2);font-size:13.5px;font-weight:500}
+.sugs button{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:8px 16px 8px 12px;border-radius:16px;background:var(--surface-2);font-size:16px;font-weight:500;border:2px solid transparent;text-align:left}
+.sugs button .ck{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--surface);color:var(--cenidor);font-weight:800;font-size:15px;flex:none}
+.sugs button.on{border-color:var(--oro);background:color-mix(in srgb,var(--oro) 22%,var(--surface))}
+.sugs button.on .ck{background:var(--oro);color:var(--noche)}
 
 
 .cycle{display:flex;align-items:center;gap:12px;margin:4px 20px 0;padding:14px 16px;border-radius:20px;background:var(--noche);color:#fff}
@@ -392,6 +395,26 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .share-line{display:flex;align-items:center;justify-content:center;gap:10px;margin:28px 16px 0;width:calc(100% - 32px);height:60px;border-radius:30px;border:2px solid var(--line);font-size:18px;font-weight:700;color:var(--cenidor)}
 @media (prefers-color-scheme:dark){.share-line{color:var(--oro)}}
 .dev-top{padding:8px 16px 0}
+.opt-row{display:flex;align-items:center;gap:14px;margin:14px 20px 0;padding:16px 18px;border-radius:20px;background:var(--surface);min-height:72px}
+.opt-row>span{flex:1}.opt-row b{display:block;font-size:18px}.opt-row small{display:block;font-size:16px;color:var(--ink-2);margin-top:2px}
+.switch{appearance:none;-webkit-appearance:none;flex:none;width:60px;height:36px;border-radius:18px;background:var(--line);position:relative;transition:background .2s;cursor:pointer}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.switch:checked{background:var(--cenidor)}.switch:checked::after{transform:translateX(24px)}
+.switch:focus-visible{outline:3px solid var(--oro);outline-offset:2px}
+.wheel-box{position:relative;height:300px;margin:16px 0 6px;border-radius:22px;background:var(--surface-2);overflow:hidden}
+.wheel{position:relative;height:100%;overflow-y:auto;scroll-snap-type:y mandatory;padding:120px 0;box-sizing:border-box;scrollbar-width:none;outline:none;
+  -webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
+.wheel::-webkit-scrollbar{display:none}
+.wheel:focus-visible{box-shadow:inset 0 0 0 3px var(--oro)}
+.wi{height:60px;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;gap:12px;color:var(--ink-2);cursor:pointer;transition:color .15s,transform .15s}
+.wi b{font-size:19px;font-weight:600}.wi span{font-size:16px;opacity:.8}
+.wi.sel{color:var(--ink);transform:scale(1.08)}.wi.sel b{font-weight:800}
+.wheel-band{position:absolute;left:12px;right:12px;top:120px;height:60px;border-radius:16px;background:var(--surface);box-shadow:0 1px 4px rgba(31,36,86,.12);pointer-events:none}
+.wheel-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wheel-btns .btn-p{margin-top:8px;font-size:16px;padding:0 8px}
+#pSpeed{min-width:62px}
+#velPrueba{display:flex;align-items:center;justify-content:center;gap:10px}
+.bi{display:inline-grid;width:22px;height:22px}.bi svg{width:22px;height:22px}
 .toast{position:absolute;left:50%;top:calc(var(--safe-t) + 14px);z-index:60;transform:translate(-50%,-140%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:16px;font-size:14px;font-weight:500;transition:transform .35s var(--ease);max-width:88%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .toast.on{transform:translate(-50%,0)}
 .hidden{display:none!important}
@@ -483,6 +506,7 @@ const U=dev=>({novena:"Novena",coronilla:"Coronilla",rosario:"Rosario",diaria:"O
 const SES=t=>t==="coronilla"||t==="rosario"; // una sesión: cada rezo es un ciclo con su intención
 const MASC=dev=>dev.type==="rosario"; // «este rosario», «otro rosario»
 const esta=dev=>MASC(dev)?"este":"esta", otra=dev=>MASC(dev)?"otro":"otra", rezadaA=dev=>MASC(dev)?"Rezado":"Rezada";
+async function setExtra(id,k,on){const st=await devState(id);st.extras=Object.assign({},st.extras,{[k]:on});await Store.set(id,st);if(P.meta&&P.meta.id===id&&!P.playing)P.meta=null;toast(on?"Se rezarán al final del Rosario":"El Rosario terminará sin ellas",1800,true)}
 function misterioHoy(dev,d=new Date()){if(dev.type!=="rosario")return 1;const w=d.getDay();return (dev.days.find(x=>x.dias.includes(w))||dev.days[0]).n}
 const u=dev=>U(dev).toLowerCase();
 
@@ -658,16 +682,18 @@ async function sheetNuevoCiclo(id){
     <div class="sub">${esc(dev.title)}. ${e.completa?`Terminaste la novena #${c.n}.`:`La novena #${c.n} va en el día ${e.done.size} de 9 y quedará guardada en tu historial.`} Elige qué intenciones mantienes y añade las nuevas.</div>
     ${prev.length?`<div class="pick-h">Intenciones de la novena #${c.n}</div><div class="picks">${lista}</div>`:lista}
     <div class="pick-h">Nueva intención</div>
-    <textarea id="ncTx" placeholder="En esta novena te pido por…" maxlength="400" style="min-height:84px;margin-top:6px"></textarea>
+    <textarea id="ncTx" placeholder="En esta novena te pido por…" maxlength="600" style="min-height:84px;margin-top:6px"></textarea>
+    ${sugsHtml("ncTx")}
     <div class="pick-h">Día primero</div>
     <input type="date" id="ncStart" value="${ini}" class="date-in">
     <button class="btn-p" onclick="crearCiclo('${id}')">Empezar la novena #${c.n+1}</button>`);
+  conSugs("ncTx");
 }
 async function crearCiclo(id){
   const dev=await loadDev(id),st=await devState(id),c=cur(st);
   const keep=[...document.querySelectorAll('.picks input:checked')].map(i=>i.value);
   const ints=c.intenciones.filter(x=>keep.includes(x.id)).map(x=>({id:uid(),texto:x.texto,fecha:hoyStr(),recibida:null,desde:c.n}));
-  const t=$("#ncTx").value.trim();if(t)ints.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null});
+  lineas($("#ncTx").value).forEach(t=>ints.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null}));
   if(!c.fin)c.fin=hoyStr();
   st.ciclos.push(mkCiclo(c.n+1,$("#ncStart").value||hoyStr(),ints));
   await Store.set(id,st);closeSheet();P.reset();
@@ -711,6 +737,7 @@ async function renderDev(id){
       ${dev.type==="rosario"?`<div class="today-head" style="padding-top:18px"><div class="day">Hoy, ${esc(fecha(new Date()).split(" ")[0].toLowerCase())}</div><h1>${esc(dh.title)}</h1><div class="meta">${dh.mins} minutos con voz guiada</div></div>`:""}
       <button class="cta" style="margin-top:20px" onclick="go('${id}-dia-${dh.n}')"><span class="pl">${I.play}</span>Rezar ${dev.type==="rosario"?"el Rosario":"la coronilla"}</button>
       <div class="hint" style="margin-top:14px">Antes de empezar te preguntamos por qué intención rezas. Hora habitual: ${hora12(st.hora)}</div>
+      ${Object.entries(dev.common).filter(([k,b])=>b.optional).map(([k,b])=>`<label class="opt-row"><span><b>Incluir las ${esc(b.title)}</b><small>Al final, unos ${b.mins} minutos más</small></span><input type="checkbox" class="switch" ${st.extras&&st.extras[k]?"checked":""} onchange="setExtra('${id}','${k}',this.checked)"></label>`).join("")}
       ${dev.type==="rosario"?`<h2 class="sec">Los misterios</h2>
       <div class="list">${dev.days.map(d=>`<button class="lrow mis ${d.n===dh.n?"today":""}" onclick="go('${id}-dia-${d.n}')"><span class="lt"><b>${esc(d.title)}</b><small>${d.n===dh.n?"Los de hoy · ":""}${esc(d.diasTxt[0].toUpperCase()+d.diasTxt.slice(1))}</small></span><span class="chev">${I.play}</span></button>`).join("")}</div>
       <div class="sub pad" style="margin-top:10px">Cada día se rezan los misterios que le corresponden, pero puedes elegir otros.</div>`:""}
@@ -763,15 +790,27 @@ async function renderIntenciones(){
   const cerrada=dev.type==="novena"?estado(dev,c).completa:!!c.fin;
   if(INT_VIEW==="actual"&&!cerrada)$("#screen").insertAdjacentHTML("beforeend",`<button class="fab" onclick="sheetIntencion('${id}')">${I.plus}Nueva intención</button>`);
 }
+/* Sugerencias de intención: se pueden marcar varias; cada una se agrega en su propia línea debajo de lo escrito */
+const SUGS=["Por la salud de mi familia","Por mi trabajo","Por la paz en mi hogar","Por los enfermos","Por las almas del purgatorio"];
+const lineas=v=>v.split("\n").map(x=>x.trim()).filter(Boolean);
+function sugsHtml(tx){return `<div class="sugs" data-for="${tx}" role="group" aria-label="Sugerencias">${SUGS.map((s,k)=>`<button type="button" aria-pressed="false" onclick="toggleSug('${tx}',${k})"><span class="ck" aria-hidden="true">+</span>${s}</button>`).join("")}</div>`}
+function toggleSug(tx,k){const t=$("#"+tx),s=SUGS[k];let ls=t.value.split("\n");
+  if(ls.some(x=>x.trim()===s))ls=ls.filter(x=>x.trim()!==s);
+  else{while(ls.length&&!ls[ls.length-1].trim())ls.pop();ls.push(s)}
+  t.value=ls.join("\n");t.dispatchEvent(new Event("input"))}
+function syncSugs(tx){const t=$("#"+tx),box=document.querySelector(`.sugs[data-for="${tx}"]`);if(!t||!box)return;const ls=lineas(t.value);
+  box.querySelectorAll("button").forEach((b,k)=>{const on=ls.includes(SUGS[k]);b.classList.toggle("on",on);b.setAttribute("aria-pressed",on);b.querySelector(".ck").textContent=on?"✓":"+"});
+  t.style.height="auto";t.style.height=Math.min(220,t.scrollHeight+2)+"px"}
+function conSugs(tx,extra){const t=$("#"+tx);if(!t)return;t.addEventListener("input",()=>{syncSugs(tx);extra&&extra()})}
 function sheetIntencion(id){
-  const sugs=["Por la salud de mi familia","Por mi trabajo","Por la paz en mi hogar","Por los enfermos","Por las almas del purgatorio"];
-  openSheet(`<h3>Nueva intención</h3><div class="sub">Escríbela como se la dirías a Dios.</div>
-    <textarea id="intTx" placeholder="Te pido por…" maxlength="400"></textarea>
-    <div class="sugs">${sugs.map(s=>`<button onclick="document.getElementById('intTx').value='${s}';document.getElementById('intOk').disabled=false">${s}</button>`).join("")}</div>
+  openSheet(`<h3>Nueva intención</h3><div class="sub">Escríbela como se la dirías a Dios, o toca una o varias sugerencias.</div>
+    <textarea id="intTx" placeholder="Te pido por…" maxlength="600"></textarea>
+    ${sugsHtml("intTx")}
     <button class="btn-p" id="intOk" disabled onclick="guardarInt('${id}')">Guardar intención</button>`);
-  const t=$("#intTx");t.oninput=()=>$("#intOk").disabled=!t.value.trim();setTimeout(()=>t.focus(),350);
+  const t=$("#intTx");conSugs("intTx",()=>{const n=lineas(t.value).length;$("#intOk").disabled=!n;$("#intOk").textContent=n>1?`Guardar ${n} intenciones`:"Guardar intención"});setTimeout(()=>t.focus(),350);
 }
-async function guardarInt(id){const t=$("#intTx").value.trim();if(!t)return;const st=await devState(id),c=cur(st);c.intenciones.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null});await Store.set(id,st);closeSheet();INT_VIEW="actual";toast("Intención guardada");P.reset();renderIntenciones();badge()}
+async function guardarInt(id){const ls=lineas($("#intTx").value);if(!ls.length)return;const st=await devState(id),c=cur(st);
+  ls.forEach(t=>c.intenciones.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null}));await Store.set(id,st);closeSheet();INT_VIEW="actual";toast(ls.length>1?`${ls.length} intenciones guardadas`:"Intención guardada");P.reset();renderIntenciones();badge()}
 async function recibida(id,cn,iid,on){const st=await devState(id),k=st.ciclos.find(x=>x.n===cn),x=k.intenciones.find(i=>i.id===iid);x.recibida=on?hoyStr():null;await Store.set(id,st);if(on)toast("¡Gracias, Señor!");if(cn===cur(st).n)P.reset();renderIntenciones();badge()}
 async function borrarInt(id,cn,iid){const st=await devState(id),k=st.ciclos.find(x=>x.n===cn);k.intenciones=k.intenciones.filter(i=>i.id!==iid);await Store.set(id,st);P.reset();renderIntenciones();badge()}
 async function badge(){const cat=await loadCatalog();let n=0;for(const k of cat.devociones){if(k.type==="diaria")continue;const st=await devState(k.id);n+=activas(cur(st)).length}const b=$("#intBadge");b.textContent=n;b.classList.toggle("hidden",!n)}
@@ -807,6 +846,7 @@ async function renderAjustes(){
       ${avisos(`crearDiarios('${id}')`,`icsDiario('${id}')`)}`;
   }
   html+=`<div class="group-h">La app</div><div class="group">
+      <button class="cell action" onclick="sheetVelocidad()"><span class="ic" style="background:var(--cenidor);color:#fff;font-size:15px;font-weight:800">1×</span><span class="k">Velocidad de la voz</span><span class="v" id="velCell">${velNombre(vel())}</span></button>
       <button class="cell action" onclick="cambiarLetra()"><span class="ic" style="background:var(--oro);color:var(--noche);font-family:var(--display);font-size:17px">Aa</span><span class="k">Tamaño de la letra</span><span class="v">${["Normal","Grande","Muy grande"][zoomActual()]}</span></button>
       <button class="cell action" onclick="compartir()"><span class="ic" style="background:#25D366">${I.heart}</span><span class="k">Compartir Hub de Fe</span>${I.chev}</button>
       ${IS_STANDALONE?"":`<button class="cell action" onclick="sheetInstalar()"><span class="ic" style="background:var(--noche)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></span><span class="k">Instalar en el teléfono</span>${I.chev}</button>`}
@@ -877,7 +917,7 @@ async function icsDiario(id){const dev=await loadDev(id),st=await devState(id);
 
 /* ================= Hoja inferior ================= */
 function openSheet(html){setTimeout(()=>{const h=$("#sheet h3");$("#sheet").setAttribute("aria-label",h?h.textContent:"Panel")},0);$("#sheet").innerHTML='<button class="grab" aria-label="Cerrar" onclick="closeSheet()"></button><button class="sheet-x" aria-label="Cerrar" onclick="closeSheet()">×</button>'+html;$("#scrim").classList.add("on");$("#sheet").classList.add("on")}
-function closeSheet(){$("#scrim").classList.remove("on");$("#sheet").classList.remove("on")}
+function closeSheet(){if(typeof PRUEBA!=="undefined"&&PRUEBA){PRUEBA.pause();PRUEBA.onended&&PRUEBA.onended()}$("#scrim").classList.remove("on");$("#sheet").classList.remove("on")}
 $("#scrim").onclick=closeSheet;document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
 
 /* ================= Reproductor ================= */
@@ -887,12 +927,23 @@ const SEC={credo:"Credo",oracion_todos:"Oración",oracion_virgen:"A la Virgen",i
   inicio:"Inicio",oh_sangre:"Inicio",pn_ave_credo:"Credo",santo_dios:"Final",oracion_final:"Final",confio:"Final",
   alabanzas:"Alabanzas",virgen:"A la Virgen",oracion_sangre:"Sangre de Cristo",sellamiento:"Sellamiento",al_senor:"Oración final",
   contricion:"Inicio",inicial:"Inicio",decena:"Decena",oracion_nudos:"A la Virgen",consagracion:"Consagración"};
-const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],ri:0,tk:0,big:0,lastTab:"hoy",elapsedBefore:[],total:0,
+/* Velocidad de la voz: una sola preferencia por persona, para todos los rezos.
+   Escala de 75 % a 125 % en pasos de 5 %: por debajo de 75 % el estiramiento del audio se vuelve artificial,
+   y por encima de 125 % la oración deja de entenderse con comodidad, sobre todo para personas mayores. */
+const VELS=[.75,.8,.85,.9,.95,1,1.05,1.1,1.15,1.2,1.25];
+const VEL_N={75:"Muy despacio",80:"Despacio",85:"Pausado",90:"Algo pausado",95:"Un poco pausado",100:"Normal",105:"Un poco ágil",110:"Algo ágil",115:"Ágil",120:"Rápido",125:"Muy rápido"};
+const velNombre=v=>VEL_N[Math.round(v*100)]||"Normal";
+const velPct=v=>Math.round(v*100)+" %";
+function vel(){let v=1;try{v=+localStorage.getItem("hubdefe:velocidad")||1}catch(e){}return VELS.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?b:a,1)}
+function setVel(v){try{localStorage.setItem("hubdefe:velocidad",v)}catch(e){}aud.playbackRate=v;if(typeof P!=="undefined")P.ui();const c=$("#velCell");if(c)c.textContent=velNombre(v)}
+/* Pausa extra entre oraciones al acelerar: así el paso de una oración a otra nunca se acorta */
+const pausaExtra=v=>v>1?Math.round((v-1)*1600):0;
+const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"hoy",elapsedBefore:[],total:0,
   reset(){if(!this.playing){this.meta=null;$("#mini").classList.add("off");syncMini()}},
   async load(id,n){
     const dev=await loadDev(id),day=dev.days.find(d=>d.n===n),st=await devState(id),c=cur(st);
     const ints=dev.type==="diaria"?[]:activas(c).map(x=>x.texto);
-    const blocks=[];for(const k of dev.order){if(k==="@day")day.blocks.forEach(b=>blocks.push([b.kind,b]));else if(k==="@intenciones")blocks.push(["intenciones",{kind:"intenciones",title:"Intenciones",paras:[]}]);else blocks.push([k,dev.common[k]])}
+    const blocks=[];for(const k of dev.order){if(k==="@day")day.blocks.forEach(b=>blocks.push([b.kind,b]));else if(k==="@intenciones")blocks.push(["intenciones",{kind:"intenciones",title:"Intenciones",paras:[]}]);else if(dev.common[k].optional&&!(st.extras&&st.extras[k]))continue;else blocks.push([k,dev.common[k]])}
     this.items=[];this.sections=[];let html="";
     blocks.forEach(([key,b])=>{
       let label=SEC[key]||b.title;if(b.kind==="lectura")label=dev.lecturaLabel||"Lectura";if(b.kind==="reflexion")label="Reflexión";if(b.kind==="decena")label=b.title.split(" ")[0];if(dev.type==="diaria")label=b.title;
@@ -946,7 +997,8 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
   async run(){const tk=++this.tk;
     while(this.playing&&tk===this.tk&&this.i<this.items.length){
       const it=this.items[this.i];this.focus();this.ui();
-      try{it.kind==="audio"?await this.audio(it.src,tk):await this.pausa(it,tk)}
+      try{it.kind==="audio"?await this.audio(it.src,tk):await this.pausa(it,tk);
+        if(it.kind==="audio"&&pausaExtra(vel())&&tk===this.tk)await new Promise(r=>setTimeout(r,pausaExtra(vel())))}
       catch(e){if(tk!==this.tk)return;
         if(e&&e.message==="audio"){ // reintentar una vez; si falla, detener sin avanzar
           try{await new Promise(r=>setTimeout(r,800));if(tk!==this.tk)return;await this.audio(it.src+"?r="+Date.now(),tk)}
@@ -961,7 +1013,7 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
     if(!aud.src.endsWith(src)){aud.src=src}
     const setT=()=>{try{aud.currentTime=seek}catch(e){}};
     if(aud.readyState>=1)setT();else if(seek>0)aud.addEventListener("loadedmetadata",setT,{once:true});else setT();
-    aud.playbackRate=this.rates[this.ri];
+    aud.preservesPitch=aud.mozPreservesPitch=aud.webkitPreservesPitch=true;aud.playbackRate=vel();
     const done=()=>{cl();res()},fail=()=>{cl();rej(new Error("audio"))};
     const cl=()=>{aud.removeEventListener("ended",done);aud.removeEventListener("error",fail);clearInterval(w)};
     const w=setInterval(()=>{if(tk!==this.tk){cl();res()}},250);
@@ -970,7 +1022,7 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
     const nx=this.items[this.i+1];if(nx&&nx.src&&nx.src!==src){const a=new Audio();a.preload="auto";a.src=nx.src}
   })},
   async pausa(it,tk){const cd=$("#"+it.cd);
-    if(it.texts.length){cd.textContent="Presentando tus intenciones…";await speakEs("Te presentamos nuestras intenciones. "+it.texts.join(". ")+".",tk,this.rates[this.ri]);if(tk!==this.tk)return}
+    if(it.texts.length){cd.textContent="Presentando tus intenciones…";await speakEs("Te presentamos nuestras intenciones. "+it.texts.join(". ")+".",tk,vel());if(tk!==this.tk)return}
     let s=it.secs;await new Promise(res=>{
       const draw=()=>{cd.innerHTML=`Silencio: <strong>${s}</strong> s <button class="skip" id="skipP">Continuar</button>`;const b=$("#skipP");if(b)b.onclick=ev=>{ev.stopPropagation();clearInterval(this.cd);res()}};
       draw();this.cd=setInterval(()=>{if(tk!==this.tk){clearInterval(this.cd);return res()}s--;if(s<=0){clearInterval(this.cd);return res()}draw()},1000)});
@@ -985,7 +1037,7 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
       else if(this.wcur){this.wcur.classList.remove("cur");this.wcur=null;this.wk=-1}
       const now=performance.now();if(this.playing&&it&&it.kind==="audio"&&now-(this.lastT||0)>250){this.lastT=now;
         const e=(this.elapsedBefore[this.i]||0)+Math.min(aud.currentTime||0,it.dur),pct=this.total?e/this.total*100:0;
-        $("#tA").textContent=mmss(e);$("#tB").textContent="-"+mmss(Math.max(0,this.total-e));$("#pBar").style.width=pct+"%";$("#miniProg").style.width=pct+"%"}
+        $("#tA").textContent=mmss(e/vel());$("#tB").textContent="-"+mmss(Math.max(0,this.total-e)/vel());$("#pBar").style.width=pct+"%";$("#miniProg").style.width=pct+"%"}
       if(this.playing)this.raf=requestAnimationFrame(step)};
     this.raf=requestAnimationFrame(step);
   },
@@ -1003,9 +1055,9 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
     const it=this.items[Math.min(this.i,this.items.length-1)];
     const el=this.i<this.items.length?(this.elapsedBefore[this.i]||0)+(this.playing&&it&&it.kind==="audio"?Math.min(aud.currentTime||0,it.dur):0):this.total;const pct=this.total?el/this.total*100:0;
     $("#pBar").style.width=pct+"%";$("#miniProg").style.width=pct+"%";
-    $("#tA").textContent=mmss(el);$("#tB").textContent="-"+mmss(Math.max(0,this.total-el));
+    $("#tA").textContent=mmss(el/vel());$("#tB").textContent="-"+mmss(Math.max(0,this.total-el)/vel());
     $("#pSec").textContent=it?(it.bead?`${it.title} · ${it.bead.k+1} de ${document.querySelectorAll("#"+it.bead.id+" i").length}`:it.title):"";
-    $("#pSpeed").textContent=String(this.rates[this.ri]).replace(".",",")+"×";
+    $("#pSpeed").textContent=velPct(vel()).replace(" ","\u00a0");$("#pSpeed").setAttribute("aria-label","Velocidad de la voz: "+velNombre(vel()));
     if(this.meta){$("#miniA").textContent=this.meta.type==="novena"?this.meta.label+": "+this.meta.title:this.meta.title;$("#miniB").textContent=it?it.title:""}
     let curS=0;this.sections.forEach((s,k)=>{if(this.i>=s.start)curS=k});
     $("#chips").querySelectorAll(".chip").forEach((ch,k)=>{ch.classList.toggle("on",k===curS&&this.i<this.items.length);ch.classList.toggle("done",k<curS)});
@@ -1029,13 +1081,14 @@ async function openPlayer(id,n){marcarUso(id);
 }
 async function sheetIntencionAntes(id,n){const dev=await loadDev(id),un=u(dev);
   openSheet(`<h3>¿Por qué intención rezas?</h3><div class="sub">Cada ${un} lleva su motivo. Se presentará al empezar.</div>
-    <textarea id="antesTx" placeholder="Rezo ${esta(dev)} ${un} por…" maxlength="400"></textarea>
+    <textarea id="antesTx" placeholder="Rezo ${esta(dev)} ${un} por…" maxlength="600"></textarea>
+    ${sugsHtml("antesTx")}
     <button class="btn-p" onclick="antesOk('${id}',${n},true)">Empezar a rezar</button>
     <button class="btn-p ghost" onclick="antesOk('${id}',${n},false)">Rezar sin escribir intención</button>`);
-  setTimeout(()=>$("#antesTx")&&$("#antesTx").focus(),350);
+  conSugs("antesTx");setTimeout(()=>$("#antesTx")&&$("#antesTx").focus(),350);
 }
-async function antesOk(id,n,usar){const t=($("#antesTx").value||"").trim();
-  if(usar&&t){const st=await devState(id);cur(st).intenciones.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null});await Store.set(id,st)}
+async function antesOk(id,n,usar){const ls=lineas($("#antesTx").value||"");
+  if(usar&&ls.length){const st=await devState(id);ls.forEach(t=>cur(st).intenciones.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null}));await Store.set(id,st)}
   closeSheet();P.meta=null;if(location.hash!=="#"+id+"-dia-"+n)location.hash=id+"-dia-"+n;else openPlayer(id,n)}
 function closePlayer(nav=true){
   if(!$("#player").classList.contains("open"))return;
@@ -1049,7 +1102,32 @@ $("#pClose").onclick=()=>closePlayer(true);
 $("#pPlay").onclick=()=>P.toggle();
 $("#pPrev").onclick=()=>P.jump(P.i-1);
 $("#pNext").onclick=()=>P.jump(P.i+1);
-$("#pSpeed").onclick=()=>{P.ri=(P.ri+1)%P.rates.length;aud.playbackRate=P.rates[P.ri];P.ui()};
+$("#pSpeed").onclick=()=>sheetVelocidad();
+const ITEM_H=60;
+function sheetVelocidad(){const v0=vel(),i0=VELS.indexOf(v0);
+  openSheet(`<h3>Velocidad de la voz</h3><div class="sub">Gira la rueda o usa los botones. Se usa en todos los rezos y las pausas se mantienen claras.</div>
+    <div class="wheel-box"><div class="wheel-band" aria-hidden="true"></div>
+      <div class="wheel" id="wheel" tabindex="0" role="listbox" aria-label="Velocidad de la voz">${VELS.map((v,k)=>`<div class="wi" role="option" data-k="${k}" aria-selected="${k===i0}" onclick="wheelTo(${k},true)"><b>${velNombre(v)}</b><span>${velPct(v)}</span></div>`).join("")}</div></div>
+    <div class="wheel-btns"><button class="btn-p ghost" onclick="wheelStep(-1)" aria-label="Más despacio">− Más despacio</button><button class="btn-p ghost" onclick="wheelStep(1)" aria-label="Más rápido">Más rápido +</button></div>
+    <button class="btn-p" id="velPrueba" onclick="probarVel()"><span class="bi">${I.play}</span>Escuchar cómo suena</button>
+    <button class="btn-p ghost" onclick="wheelTo(${VELS.indexOf(1)},true)">Volver a la velocidad normal</button>`);
+  const w=$("#wheel");requestAnimationFrame(()=>{w.scrollTop=i0*ITEM_H;marcarWheel(i0)});
+  let t;w.addEventListener("scroll",()=>{marcarWheel(Math.round(w.scrollTop/ITEM_H));clearTimeout(t);t=setTimeout(()=>{const k=Math.max(0,Math.min(VELS.length-1,Math.round(w.scrollTop/ITEM_H)));if(VELS[k]!==vel())setVel(VELS[k])},140)},{passive:true});
+  w.addEventListener("keydown",e=>{if(e.key==="ArrowDown"||e.key==="ArrowRight"){e.preventDefault();wheelStep(1)}if(e.key==="ArrowUp"||e.key==="ArrowLeft"){e.preventDefault();wheelStep(-1)}});
+}
+function marcarWheel(k){document.querySelectorAll("#wheel .wi").forEach((e,j)=>{e.classList.toggle("sel",j===k);e.setAttribute("aria-selected",j===k)})}
+function wheelTo(k,smooth){k=Math.max(0,Math.min(VELS.length-1,k));const w=$("#wheel");if(w)w.scrollTo({top:k*ITEM_H,behavior:smooth?"smooth":"auto"});marcarWheel(k);setVel(VELS[k])}
+function wheelStep(d){wheelTo(VELS.indexOf(vel())+d,true)}
+let PRUEBA=null;
+async function probarVel(){ // si ya está sonando un rezo, se oye ahí mismo; si no, un fragmento del Padre nuestro
+  if(P.playing){toast("Escucha el rezo: ya suena a "+velPct(vel()),1800,true);return}
+  if(PRUEBA){PRUEBA.pause();PRUEBA.onended();return}
+  try{const d=await loadDev("rosario");const src=d.common.tres_aves.paras[0].audio;
+    PRUEBA=new Audio(src);PRUEBA.preservesPitch=PRUEBA.webkitPreservesPitch=true;PRUEBA.playbackRate=vel();
+    const iv=setInterval(()=>{if(PRUEBA)PRUEBA.playbackRate=vel()},300);
+    $("#velPrueba").innerHTML=`<span class="bi">${I.pause}</span>Detener`;
+    const fin=()=>{clearInterval(iv);PRUEBA=null;const b=$("#velPrueba");if(b)b.innerHTML=`<span class="bi">${I.play}</span>Escuchar cómo suena`};
+    PRUEBA.onended=fin;PRUEBA.onerror=fin;setTimeout(()=>{if(PRUEBA){PRUEBA.pause();fin()}},15000);await PRUEBA.play()}catch(e){toast("No se pudo reproducir el ejemplo",2500,true)}}
 $("#pView").onclick=()=>$("#player").classList.toggle("cover");
 $("#pText").onclick=()=>{P.big=(P.big+1)%3;const s=[21,24,27][P.big];document.querySelectorAll(".ly:not(.head)").forEach(e=>e.style.fontSize=(e.classList.contains("verse")?s+2:s)+"px");P.focus()};
 $("#mini").onclick=e=>{if(e.target.closest("#miniPP")){e.stopPropagation();P.toggle();return}go(P.meta.id+"-dia-"+P.meta.n)};
@@ -1091,7 +1169,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.18-7ee424";
+const APP_VERSION="2026.11.18-6346c0";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
