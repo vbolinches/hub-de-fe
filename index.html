@@ -237,6 +237,12 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .times{display:flex;justify-content:space-between;font-size:12px;opacity:.65;margin:6px 20px 0}
 .ctrls{display:flex;align-items:center;justify-content:space-between;padding:10px 26px calc(var(--safe-b) + 22px)}
 .ctrls .sm{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px}
+.ctrls .sm.lab{width:76px;height:64px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.ctrls .sm.lab small{font-size:13px;font-weight:600;opacity:.92;letter-spacing:.01em}
+.ctrls .sm.lab:active{background:rgba(255,255,255,.12)}
+.gauge .needle{transform-origin:16px 21px;transition:transform .35s var(--ease)}
+.ctrls .sm.alt small{color:var(--oro)}
+.aa-ic{font-family:var(--display);font-size:20px;line-height:30px;height:30px}.aa-ic span{font-size:29px}
 .ctrls .md{width:54px;height:54px;border-radius:50%;display:grid;place-items:center}
 .ctrls .big{width:76px;height:76px;border-radius:50%;background:var(--oro);color:var(--noche);display:grid;place-items:center;box-shadow:0 10px 30px rgba(232,182,76,.35);transition:transform .12s}
 .ctrls .big:active{transform:scale(.94)}
@@ -452,11 +458,11 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
     <div class="scrub"><i id="pBar"></i></div>
     <div class="times"><span id="tA">0:00</span><span id="tB">0:00</span></div>
     <div class="ctrls">
-      <button class="sm" id="pSpeed" aria-label="Velocidad de la voz">1×</button>
+      <button class="sm lab" id="pSpeed" aria-label="Velocidad de la voz"><svg class="gauge" viewBox="0 0 32 24" width="40" height="30" aria-hidden="true"><path d="M4 21a12 12 0 1 1 24 0" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M8.3 9.6l1.6 1.4M16 5.2v2.2M23.7 9.6l-1.6 1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".7"/><g class="needle"><path d="M16 21L16 10" stroke="var(--oro)" stroke-width="2.8" stroke-linecap="round"/></g><circle cx="16" cy="21" r="2.6" fill="var(--oro)"/></svg><small>Velocidad</small></button>
       <button class="md" id="pPrev" aria-label="Párrafo anterior"><svg viewBox="0 0 24 24" fill="#fff"><path d="M6 6h2v12H6zM9.5 12 18 6v12z"/></svg></button>
       <button class="big" id="pPlay" aria-label="Reproducir"></button>
       <button class="md" id="pNext" aria-label="Párrafo siguiente"><svg viewBox="0 0 24 24" fill="#fff"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
-      <button class="sm" id="pText" aria-label="Tamaño del texto">Aa</button>
+      <button class="sm lab" id="pText" aria-label="Tamaño del texto"><span class="aa-ic">A<span>A</span></span><small>Letra</small></button>
     </div>
     <div class="done-view" id="doneView"></div>
   </section>
@@ -1057,7 +1063,8 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
     $("#pBar").style.width=pct+"%";$("#miniProg").style.width=pct+"%";
     $("#tA").textContent=mmss(el/vel());$("#tB").textContent="-"+mmss(Math.max(0,this.total-el)/vel());
     $("#pSec").textContent=it?(it.bead?`${it.title} · ${it.bead.k+1} de ${document.querySelectorAll("#"+it.bead.id+" i").length}`:it.title):"";
-    $("#pSpeed").textContent=velPct(vel()).replace(" ","\u00a0");$("#pSpeed").setAttribute("aria-label","Velocidad de la voz: "+velNombre(vel()));
+    {const v=vel(),n=$("#pSpeed .needle");if(n)n.style.transform=`rotate(${Math.round((v-1)*4*75)}deg)`; // aguja: 75 % a la izquierda, 125 % a la derecha
+     $("#pSpeed").classList.toggle("alt",v!==1);$("#pSpeed").setAttribute("aria-label","Velocidad de la voz: "+velNombre(v)+", "+velPct(v));}
     if(this.meta){$("#miniA").textContent=this.meta.type==="novena"?this.meta.label+": "+this.meta.title:this.meta.title;$("#miniB").textContent=it?it.title:""}
     let curS=0;this.sections.forEach((s,k)=>{if(this.i>=s.start)curS=k});
     $("#chips").querySelectorAll(".chip").forEach((ch,k)=>{ch.classList.toggle("on",k===curS&&this.i<this.items.length);ch.classList.toggle("done",k<curS)});
@@ -1169,7 +1176,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.18-6346c0";
+const APP_VERSION="2026.11.18-3ee5b6";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
