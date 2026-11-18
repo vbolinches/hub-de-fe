@@ -210,6 +210,8 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .player.cover .p-art{flex-direction:column;text-align:center;padding-top:20px}
 .player.cover .p-img{width:min(82%,330px);height:auto;aspect-ratio:1;border-radius:28px}
 .player.cover .p-art img{transform:scale(1)}
+.p-img.foto img{transform:none;object-position:50% 6%}
+.player.cover .p-img.foto{width:auto;height:min(52vh,440px);aspect-ratio:465/684}
 .player.cover .lyrics{display:none}
 .lyrics{flex:1;overflow-y:auto;padding:18vh 24px 22vh;scrollbar-width:none;mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 80%,transparent 100%);-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 80%,transparent 100%)}
 .lyrics::-webkit-scrollbar{display:none}
@@ -980,7 +982,8 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
     $("#chips").innerHTML=this.sections.map((s,k)=>`<button class="chip" data-k="${k}">${esc(s.label)}</button>`).join("");
     $("#chips").querySelectorAll(".chip").forEach(ch=>ch.onclick=()=>this.jump(this.sections[+ch.dataset.k].start));
     // La imagen de la devoción (el Divino Niño, la Virgen…) queda a la vista todo el rezo; la del día va de fondo
-    const fija=dev.type==="diaria"?day.img:dev.cover;
+    const fija=dev.imagen||(dev.type==="diaria"?day.img:dev.cover);
+    $("#pImgBtn").classList.toggle("foto",!!dev.imagen); // foto real: se ve completa, sin acercar
     $("#pImg").src=fija;$("#pImg").alt=dev.type==="diaria"?"":`Imagen: ${dev.title.replace(/^Novena (Bíblica )?(al?|a la) /i,"")}`;$("#pBg").style.backgroundImage=`url(${day.img})`;
     $("#pDev").textContent=dev.type==="diaria"?dev.title:`${dev.short}, ${u(dev)} #${c.n}`;
     $("#pDay").textContent=dev.type==="novena"?day.label:day.title;$("#pTitle").textContent=dev.type==="novena"?day.title:dev.type==="coronilla"?(ints[0]||"Por la misericordia de Dios"):dev.type==="rosario"?(ints[0]||"Con María, por tus intenciones"):day.label;
@@ -1182,7 +1185,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.18-88e944";
+const APP_VERSION="2026.11.18-2322f2";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
