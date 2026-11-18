@@ -53,7 +53,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* ---------- Tabs ---------- */
-.tabs{position:absolute;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);height:calc(var(--tabh) + var(--safe-b));padding-bottom:var(--safe-b);
+.tabs{position:absolute;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);height:calc(var(--tabh) + var(--safe-b));padding-bottom:var(--safe-b);
   background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:saturate(1.4) blur(18px);-webkit-backdrop-filter:saturate(1.4) blur(18px);border-top:1px solid var(--line)}
 .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11.5px;font-weight:600;color:var(--ink-2);position:relative}
 .tab svg{width:24px;height:24px}
@@ -287,7 +287,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .medal img{width:100%;height:100%;object-fit:cover}
 .dayrows{display:flex;flex-direction:column;gap:8px;margin:4px 20px 0}
 .dayrow{display:grid;grid-template-columns:62px 46px 1fr 36px;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;background:var(--surface);text-align:left;width:100%}
-.dayrow .hr{font-size:13px;font-weight:600;color:var(--ink-2);line-height:1.2}
+.dayrow .hr{font-size:13px;font-weight:600;color:var(--ink-2);line-height:1.2;white-space:nowrap}
 .dayrow img{width:46px;height:46px;border-radius:14px;object-fit:cover}
 .dayrow .tx b{display:block;font-weight:600;font-size:15px;line-height:1.25}
 .dayrow .tx small{font-size:12.5px;color:var(--ink-2)}
@@ -336,6 +336,26 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .qr canvas,.qr img{width:180px;height:180px;border-radius:14px;background:#fff;padding:10px}
 .linkbox{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--bg);font-size:14px;word-break:break-all;color:var(--ink-2)}
 .boot{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:var(--display);font-size:22px;color:var(--ink-2)}.boot img{border-radius:18px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 20px 0}
+.tile{display:flex;flex-direction:column;text-align:left;padding:0;border-radius:22px;overflow:hidden;background:var(--surface);box-shadow:0 1px 2px rgba(31,36,86,.06),0 8px 22px rgba(31,36,86,.07);transition:transform .12s}
+.tile:active{transform:scale(.97)}
+.tile-img{position:relative;display:block;aspect-ratio:4/3;overflow:hidden;background:var(--surface-2)}
+.tile-img img{width:100%;height:100%;object-fit:cover;object-position:50% 25%;display:block}
+.tile-dots{position:absolute;left:10px;right:10px;bottom:8px;display:flex;gap:3px}
+.tile-dots i{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.45)}
+.tile-dots i.on{background:var(--oro)}
+.tile-b{display:flex;flex-direction:column;gap:2px;padding:10px 12px 12px;min-height:66px}
+.tile-t{font-family:var(--display);font-size:17.5px;line-height:1.15}
+.tile-s{font-size:12.5px;color:var(--ink-2);line-height:1.3}
+.soon-tile{opacity:.6}
+.soon-art{display:grid;place-items:center;color:var(--cenidor);background:linear-gradient(135deg,var(--surface-2),var(--rosa-2))}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 16px 0}
+.tool{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 2px;border-radius:18px;background:var(--surface);font-size:11.5px;font-weight:600;text-align:center;line-height:1.2}
+.tool small{display:block;font-weight:500;color:var(--ink-2);font-size:11px;margin-top:2px}
+.tool-ic{width:46px;height:46px;border-radius:15px;display:grid;place-items:center}
+.dev-top{display:flex;align-items:center;gap:10px;padding:6px 16px 0}
+.dev-top-t{flex:1;text-align:center;font-weight:600;color:var(--ink-2);font-size:14.5px}
+.round-btn{width:42px;height:42px;border-radius:50%;background:var(--surface);display:grid;place-items:center;color:var(--cenidor);flex:none}
 .toast{position:absolute;left:50%;top:calc(var(--safe-t) + 14px);z-index:60;transform:translate(-50%,-140%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:16px;font-size:14px;font-weight:500;transition:transform .35s var(--ease);max-width:88%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .toast.on{transform:translate(-50%,0)}
 .hidden{display:none!important}
@@ -355,8 +375,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
   </button>
 
   <nav class="tabs" id="tabs" aria-label="Navegación">
-    <button class="tab" data-tab="hoy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Hoy</button>
-    <button class="tab" data-tab="devociones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5M12 7v6M9.5 9.5h5"/></svg>Devociones</button>
+    <button class="tab" data-tab="hoy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>Inicio</button>
     <button class="tab" data-tab="intenciones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Intenciones<span class="badge hidden" id="intBadge"></span></button>
     <button class="tab" data-tab="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>Recordatorios</button>
   </nav>
@@ -489,14 +508,9 @@ function estado(dev,c){
   const atraso=(c.start&&sig&&hoyN>=1)?Math.max(0,Math.min(hoyN,total)-sig.n):0;
   return{total,done,sig,hoyN,atraso,completa:done.size>=total,empieza:c.start&&hoyN<1}
 }
-async function heroNovena(){ // la novena que toca: en curso y empezada; las de fecha fija ganan dentro de su temporada
-  const list=await byType("novena");let best=null,bs=-1;
-  for(const k of list){const dev=await loadDev(k.id),st=await devState(k.id),c=cur(st),e=estado(dev,c);
-    let s=0;if(!e.completa&&c.start&&e.hoyN>=1)s=dev.fixedStart&&e.hoyN<=9?4:3;else if(!e.completa&&e.done.size)s=2;else if(k.id==="divino-nino")s=1;
-    if(s>bs){bs=s;best=k.id}}
-  return best;
-}
-
+function marcarUso(id){INT_DEV=null;AJ_DEV=null;try{localStorage.setItem("hubdefe:ultimo",id)}catch(e){}}
+async function ultimaDev(tipos){const cat=await loadCatalog();let u=null;try{u=localStorage.getItem("hubdefe:ultimo")}catch(e){}
+  const ok=cat.devociones.filter(k=>!tipos||tipos.includes(k.type));return (ok.find(k=>k.id===u)||ok[0]).id}
 /* ================= Custodia (9 rayos = 9 días) ================= */
 const Lit=new Set();
 function custodia(dev,e,{size=260}={}){
@@ -532,51 +546,60 @@ document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>go(b.dataset.tab));
 function paint(html){const s=$("#screen");s.innerHTML=`<div class="enter">${html}</div>`;s.scrollTop=0}
 
 /* ================= Pantalla: Hoy ================= */
-async function filasDelDia(){ // oraciones diarias + coronilla, ordenadas por hora
-  const rows=[];
-  for(const k of await byType("diaria")){const dev=await loadDev(k.id),st=await devState(k.id);
-    dev.days.forEach(d=>rows.push({hora:st.horas[d.n]||d.hora,t:d.title,s:d.mins+" min",img:d.img,done:st.hoy.done.includes(d.n),go:`${k.id}-dia-${d.n}`}))}
-  for(const k of await byType("coronilla")){const dev=await loadDev(k.id),st=await devState(k.id);
-    const hoyN=st.ciclos.filter(c=>c.fin===hoyStr()).length;
-    rows.push({hora:st.hora,t:dev.title,s:hoyN?`Rezada hoy${hoyN>1?" "+hoyN+" veces":""}`:`${dev.days[0].mins} min, con tu intención`,img:dev.cover,done:hoyN>0,go:`${k.id}-dia-1`})}
-  rows.sort((a,b)=>a.hora.localeCompare(b.hora));
-  const now=new Date().getHours()*60+new Date().getMinutes();
-  const nextIdx=rows.findIndex(r=>!r.done&&(+r.hora.slice(0,2)*60+ +r.hora.slice(3))>=now-90);
-  return rows.map((r,i)=>`<button class="dayrow ${r.done?"done":""} ${i===nextIdx?"next":""}" onclick="go('${r.go}')"><span class="hr">${hora12(r.hora).replace(" ","&nbsp;")}</span><img src="${r.img}" alt=""><span class="tx"><b>${esc(r.t)}</b><small>${esc(r.s)}</small></span><span class="st">${r.done?I.check:I.play}</span></button>`).join("");
+/* ---------- estado breve de cada devoción (igual para todas) ---------- */
+async function resumen(k){
+  const dev=await loadDev(k.id),st=await devState(k.id),c=cur(st),r={id:k.id,dev,st,c};
+  if(dev.type==="novena"){const e=estado(dev,c);r.e=e;
+    r.estado=e.completa?`Novena #${c.n} completada`:e.empieza?`Empieza el ${fechaCorta(parseYmd(c.start))}`:(c.start||e.done.size)?`Día ${e.sig.n} de 9${e.atraso>0?" · atrasada":""}`:"9 días · "+dev.days[0].mins+" min";
+    r.enCurso=!e.completa&&c.start&&!e.empieza;
+    r.pendienteHoy=r.enCurso&&e.hoyN>=e.sig.n; // le toca hoy (o va atrasada)
+  }else if(dev.type==="coronilla"){const n=st.ciclos.filter(x=>x.fin===hoyStr()).length;r.hechaHoy=n>0;
+    r.estado=n?`Rezada hoy${n>1?" ("+n+")":""}`:`${dev.days[0].mins} min · ${hora12(st.hora)}`;
+  }else{r.estado=`${st.hoy.done.length} de ${dev.days.length} hoy`}
+  return r;
 }
-async function renderHoy(){
-  const id=await heroNovena(),dev=await loadDev(id),st=await devState(id),c=cur(st),e=estado(dev,c);
-  const act=activas(c);const d=e.sig||dev.days[dev.days.length-1];
-  let head,cta;
-  if(e.completa){
-    head=`<div class="day">${esc(dev.short)}: novena #${c.n} completada</div><h1>Los nueve rayos están encendidos</h1><div class="meta">Da gracias por lo recibido. Cuando quieras, empieza otra novena con las mismas intenciones o con nuevas.</div>`;
-    cta=`<button class="cta" onclick="sheetNuevoCiclo('${id}')"><span class="pl">${I.loop}</span>Empezar una nueva novena</button>`;
-  }else{
-    let meta=`${d.mins} minutos con voz guiada`;
-    if(e.empieza)meta=`Empieza el ${fecha(parseYmd(c.start))}`;
-    else if(e.atraso>0)meta=`Vas ${e.atraso===1?"un día":e.atraso+" días"} atrasado. Puedes ponerte al día hoy.`;
-    head=`<div class="day">${esc(dev.title)}${c.n>1?`, #${c.n}`:""}</div><h1>${esc(d.label)}: ${esc(d.title)}</h1><div class="meta">${esc(meta)}</div>`;
-    cta=`<button class="cta" onclick="go('${id}-dia-${d.n}')"><span class="pl">${I.play}</span>Rezar el ${esc(d.label.toLowerCase())}</button>`;
+const minutos=h=>+h.slice(0,2)*60+ +h.slice(3);
+async function paraHoy(lista){ // solo lo pendiente de hoy, según lo que cada persona tiene en curso
+  const now=new Date().getHours()*60+new Date().getMinutes(),rows=[];
+  for(const r of lista){
+    if(r.dev.type==="novena"&&r.pendienteHoy){const d=r.e.sig;rows.push({h:r.st.hora,t:`${r.dev.short}: ${d.label.toLowerCase()}`,s:d.title,img:r.dev.cover,go:`${r.id}-dia-${d.n}`})}
+    if(r.dev.type==="coronilla"&&!r.hechaHoy&&now>=minutos(r.st.hora)-120)rows.push({h:r.st.hora,t:r.dev.title,s:"Con tu intención",img:r.dev.cover,go:`${r.id}-dia-1`});
+    if(r.dev.type==="diaria"){const pend=r.dev.days.filter(d=>!r.st.hoy.done.includes(d.n)&&now>=minutos(r.st.horas[d.n]||d.hora)-90);
+      const d=pend[pend.length-1];if(d)rows.push({h:r.st.horas[d.n]||d.hora,t:d.title,s:d.mins+" min",img:d.img,go:`${r.id}-dia-${d.n}`})}
   }
-  // otra novena en curso
-  let otra="";for(const k of await byType("novena")){if(k.id===id)continue;const dv=await loadDev(k.id),sv=await devState(k.id),cv=cur(sv),ev=estado(dv,cv);
-    if(!ev.completa&&cv.start&&(ev.hoyN>=-14))otra+=`<button class="row-card" onclick="go('${k.id}')"><img class="thumb" src="${dv.cover}" alt=""><span><span class="t">${esc(dv.title)}</span><div class="s">${ev.empieza?"Empieza el "+fecha(parseYmd(cv.start)):`Día ${ev.sig.n} de 9`}</div></span><span class="chev">${I.chev}</span></button>`}
-  const pr=d.blocks.find(b=>b.kind==="practica");
+  rows.sort((a,b)=>a.h.localeCompare(b.h));
+  return rows.slice(0,4);
+}
+const tile=(r)=>`<button class="tile ${r.dev.type}" onclick="go('${r.id}')"><span class="tile-img"><img src="${r.dev.cover}" alt="" loading="lazy">${r.dev.type==="novena"?`<span class="tile-dots">${r.dev.days.map(d=>`<i class="${r.e.done.has(d.n)?"on":""}"></i>`).join("")}</span>`:""}</span>
+  <span class="tile-b"><span class="tile-t">${esc(r.dev.short)}</span><span class="tile-s">${esc(r.estado)}</span></span></button>`;
+const IC_SHARE='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>';
+const IC_PHONE='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg>';
+const IC_BELL='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>';
+async function renderHoy(){
+  const cat=await loadCatalog();const lista=await Promise.all(cat.devociones.map(resumen));
+  const hoy=await paraHoy(lista);
+  let nInt=0;lista.forEach(r=>{if(r.dev.type!=="diaria")nInt+=activas(r.c).length});
+  const grupo=t=>lista.filter(r=>t.includes(r.dev.type)).map(tile).join("");
+  const instalable=!IS_STANDALONE;
   paint(`
     <div class="greet"><div class="g1"><div class="hello">${saludo()}</div><div class="date">Hoy es ${fecha(new Date())}</div></div>
-      <button class="hbtn" aria-label="Compartir la app" onclick="compartir()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button></div>
+      <button class="hbtn" aria-label="Compartir la app" onclick="compartir()">${IC_SHARE}</button></div>
     ${bannerInstalar()}
-    ${custodia(dev,e)}
-    <div class="today-head">${head}</div>
-    ${cta}
-    <button class="ghost-link" onclick="go('${id}')">Ver los nueve días</button>
-    <button class="row-card" onclick="INT_DEV='${id}';go('intenciones')"><span class="ic" style="background:var(--rosa-2);color:var(--rosa)">${I.heart}</span><span><span class="t">${act.length?act.length+(act.length===1?" intención":" intenciones")+" en esta novena":"Escribe las intenciones de esta novena"}</span><div class="s">${act.length?esc(act[0].texto.slice(0,46))+(act[0].texto.length>46||act.length>1?"…":""):"Se presentan cada día"}</div></span><span class="chev">${I.chev}</span></button>
-    ${otra}
-    <div class="section">Tu día de oración</div>
-    <div class="dayrows">${await filasDelDia()}</div>
-    ${!e.completa&&pr?`<div class="practica"><h2 class="h3">Práctica del día</h2><p>${esc(pr.paras[0].text)}</p></div>`:""}
-  `);
-  Lit.clear();badge();
+    ${hoy.length?`<div class="section">Para hoy</div><div class="dayrows">${hoy.map(r=>`<button class="dayrow next" onclick="go('${r.go}')"><span class="hr">${hora12(r.h).replace(" ","&nbsp;")}</span><img src="${r.img}" alt=""><span class="tx"><b>${esc(r.t)}</b><small>${esc(r.s)}</small></span><span class="st">${I.play}</span></button>`).join("")}</div>`:""}
+    <div class="section">Novenas</div>
+    <div class="tiles">${grupo(["novena"])}</div>
+    <div class="section">Oraciones</div>
+    <div class="tiles">${grupo(["coronilla","diaria"])}
+      <div class="tile soon-tile" aria-disabled="true"><span class="tile-img soon-art"><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="17" cy="7.5" r="1.6"/><circle cx="19" cy="12.5" r="1.6"/><circle cx="7" cy="7.5" r="1.6"/><circle cx="5" cy="12.5" r="1.6"/><path d="M12 15v6M9.5 18h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span><span class="tile-b"><span class="tile-t">Santo Rosario</span><span class="tile-s">Próximamente</span></span></div></div>
+    <div class="section">Tu espacio</div>
+    <div class="tools">
+      <button class="tool" onclick="go('intenciones')"><span class="tool-ic" style="background:var(--rosa-2);color:var(--rosa-txt)">${I.heart}</span><span>Intenciones${nInt?`<small>${nInt} activas</small>`:""}</span></button>
+      <button class="tool" onclick="go('ajustes')"><span class="tool-ic" style="background:var(--oro-2);color:#8A6411">${IC_BELL}</span><span>Recordatorios</span></button>
+      <button class="tool" onclick="compartir()"><span class="tool-ic" style="background:#DDF5E5;color:#1B7A43">${IC_SHARE}</span><span>Compartir</span></button>
+      ${instalable?`<button class="tool" onclick="sheetInstalar()"><span class="tool-ic" style="background:var(--blue-soft,#E3E9F7);color:var(--cenidor)">${IC_PHONE}</span><span>Instalar</span></button>`:`<button class="tool" onclick="buscarActualizacion(true)"><span class="tool-ic" style="background:#E3E9F7;color:var(--cenidor)">${I.loop}</span><span>Actualizar</span></button>`}
+    </div>
+    <div style="height:8px"></div>`);
+  badge();
 }
 
 /* ================= Nuevo ciclo (nueva novena) ================= */
@@ -610,17 +633,31 @@ async function crearCiclo(id){
 /* ================= Pantalla de una devoción ================= */
 async function renderDev(id){
   const dev=await loadDev(id),st=await devState(id),c=cur(st);
-  const hero=(sub)=>`<div class="nov-hero"><img src="${dev.cover}" alt=""><button class="back-fab" onclick="go('devociones')" aria-label="Volver">${I.back}</button><button class="back-fab" style="left:auto;right:14px" aria-label="Compartir esta devoción" onclick="compartir('${id}','Te comparto la ${esc(dev.title)}, con voz guiada, en Hub de Fe.')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button><div class="cap"><h1>${esc(dev.title)}</h1><div class="s">${sub}</div></div></div>`;
+  const hero=(sub)=>`<div class="nov-hero"><img src="${dev.cover}" alt=""><button class="back-fab" onclick="go('hoy')" aria-label="Volver al inicio">${I.back}</button><button class="back-fab" style="left:auto;right:14px" aria-label="Compartir esta devoción" onclick="compartir('${id}','Te comparto la ${esc(dev.title)}, con voz guiada, en Hub de Fe.')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button><div class="cap"><h1>${esc(dev.title)}</h1><div class="s">${sub}</div></div></div>`;
   const foot=`<div class="foot">${dev.sourceName?esc(dev.sourceName)+". ":""}${dev.source?`<a href="${dev.source}" target="_blank" rel="noopener">Fuente del texto</a>. `:""}Voz: ${esc(dev.voice)}.</div>`;
+  marcarUso(id);
   if(dev.type==="novena"){
-    const e=estado(dev,c);
+    const e=estado(dev,c);const d=e.sig||dev.days[dev.days.length-1];const act=activas(c);
+    let meta=`${d.mins} minutos con voz guiada`;
+    if(e.empieza)meta=`Empieza el ${fecha(parseYmd(c.start))}`;else if(e.atraso>0)meta=`Vas ${e.atraso===1?"un día":e.atraso+" días"} atrasado. Puedes ponerte al día hoy.`;
+    const pr=d.blocks.find(b=>b.kind==="practica");
+    const top=`<div class="dev-top"><button class="round-btn" onclick="go('hoy')" aria-label="Volver al inicio">${I.back}</button><span class="dev-top-t">${esc(dev.short)}</span><button class="round-btn" aria-label="Compartir esta novena" onclick="compartir('${id}','Te comparto la ${esc(dev.title)}, con voz guiada, en Hub de Fe.')">${IC_SHARE}</button></div>`;
+    const cab=e.completa?`<div class="today-head"><div class="day">Novena #${c.n} completada</div><h1>${esc(dev.title)}</h1><div class="meta">Los nueve rayos están encendidos. Cuando quieras, empieza otra con las mismas intenciones o con nuevas.</div></div>
+        <button class="cta" onclick="sheetNuevoCiclo('${id}')"><span class="pl">${I.loop}</span>Empezar una nueva novena</button>`
+      :`<div class="today-head"><div class="day">${esc(dev.title)}${c.n>1?`, #${c.n}`:""}</div><h1>${esc(d.label)}: ${esc(d.title)}</h1><div class="meta">${esc(meta)}</div></div>
+        <button class="cta" onclick="go('${id}-dia-${d.n}')"><span class="pl">${I.play}</span>Rezar el ${esc(d.label.toLowerCase())}</button>`;
     const items=dev.days.map(d=>{const done=e.done.has(d.n),next=!e.completa&&e.sig&&e.sig.n===d.n;
       const f=c.start?fecha(addDays(parseYmd(c.start),d.n-1)):`${d.mins} min`;
       return `<button class="tl ${done?"done":""} ${next?"next":""}" onclick="go('${id}-dia-${d.n}')"><span class="num">${done?I.check:d.n}</span><img src="${d.img}" alt=""><span><div class="tt">${esc(d.title)}</div><div class="dd">${esc(d.label)}, ${esc(f)}</div></span><span class="go">${I.play}</span></button>`}).join("");
-    paint(`${hero(`Novena #${c.n}: ${e.done.size} de ${e.total} días rezados${c.start?(e.empieza?`. Empieza el ${fechaCorta(parseYmd(c.start))}`:`. Empezó el ${fechaCorta(parseYmd(c.start))}`):""}`)}
-      <div class="timeline">${items}</div>
-      ${e.completa?`<button class="cta" style="margin-top:22px" onclick="sheetNuevoCiclo('${id}')"><span class="pl">${I.loop}</span>Empezar una nueva novena</button>`:""}${foot}`);
-  }else if(dev.type==="coronilla"){
+    paint(`${top}${custodia(dev,e)}${cab}
+      <button class="row-card" onclick="INT_DEV='${id}';INT_VIEW='actual';go('intenciones')"><span class="ic" style="background:var(--rosa-2);color:var(--rosa-txt)">${I.heart}</span><span><span class="t">${act.length?act.length+(act.length===1?" intención":" intenciones")+" en esta novena":"Escribe las intenciones de esta novena"}</span><div class="s">${act.length?esc(act[0].texto.slice(0,46))+(act[0].texto.length>46||act.length>1?"…":""):"Se presentan cada día"}</div></span><span class="chev">${I.chev}</span></button>
+      <button class="row-card" onclick="AJ_DEV='${id}';go('ajustes')"><span class="ic" style="background:var(--oro-2);color:#8A6411">${I.clock}</span><span><span class="t">Recordatorio</span><div class="s">${c.start?esc(`${fecha(addDays(parseYmd(c.start),(e.sig?e.sig.n:1)-1))} a las ${hora12(st.hora)}`):"Elige la fecha de inicio y la hora"}</div></span><span class="chev">${I.chev}</span></button>
+      ${!e.completa&&pr?`<div class="practica"><h2 class="h3">Práctica del día</h2><p>${esc(pr.paras[0].text)}</p></div>`:""}
+      <div class="section">Los nueve días</div>
+      <div class="timeline">${items}</div>${foot}`);
+    Lit.clear();return;
+  }
+  if(dev.type==="coronilla"){
     const hechos=st.ciclos.filter(k=>k.fin).reverse();
     const hoyN=hechos.filter(k=>k.fin===hoyStr()).length;
     paint(`${hero(hoyN?`Rezada hoy${hoyN>1?" "+hoyN+" veces":""}. ${hechos.length} en total`:`${hechos.length?hechos.length+" rezadas en total":"Cinco decenas, unos "+dev.days[0].mins+" minutos"}`)}
@@ -637,20 +674,7 @@ async function renderDev(id){
 }
 
 /* ================= Pantalla: Devociones ================= */
-async function renderDevociones(){
-  const cat=await loadCatalog();let feat="",rows="";
-  for(const k of cat.devociones){const dev=await loadDev(k.id),st=await devState(k.id),c=cur(st);
-    if(dev.type==="novena"){const e=estado(dev,c);
-      const sub=e.completa?`Novena #${c.n} completada`:e.done.size?`Novena #${c.n}: vas en el día ${e.sig.n} de 9`:e.empieza?`Empieza el ${fecha(parseYmd(c.start))}`:esc(dev.subtitle);
-      feat+=`<button class="feature" onclick="go('${k.id}')"><img src="${k.cover}" alt=""><div class="cap"><h2>${esc(k.title)}</h2><div style="opacity:.85;font-size:14px;margin-top:4px">${sub}</div><div class="bar">${dev.days.map(d=>`<i class="${e.done.has(d.n)?"on":""}"></i>`).join("")}</div></div></button>`;
-    }else{
-      const s=dev.type==="coronilla"?`${st.ciclos.filter(x=>x.fin).length} rezadas. Habitual a las ${hora12(st.hora)}`:`${st.hoy.done.length} de ${dev.days.length} hoy`;
-      rows+=`<button class="row-card" onclick="go('${k.id}')"><img class="thumb" src="${k.cover}" alt=""><span><span class="t">${esc(k.title)}</span><div class="s">${esc(s)}</div></span><span class="chev">${I.chev}</span></button>`;
-    }}
-  paint(`<div class="screen-title">Devociones</div><div class="section" style="padding-top:4px">Novenas</div><div class="feats">${feat}</div><div class="section">Oraciones</div>${rows}
-    <div class="section">Próximamente</div><div class="soon"><span class="art" style="background:#3D5BB01f;color:#3D5BB0"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="17" cy="7.5" r="1.6"/><circle cx="19" cy="12.5" r="1.6"/><circle cx="7" cy="7.5" r="1.6"/><circle cx="5" cy="12.5" r="1.6"/><path d="M12 15v6M9.5 18h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span><span><div class="t">Santo Rosario</div><div class="s">Misterios del día; cada rosario con su intención</div></span><span class="tag">Pronto</span></div>`);
-}
-
+async function renderDevociones(){return go("hoy")}
 /* ================= Pantalla: Intenciones (por devoción y por rezo) ================= */
 let INT_VIEW="actual",INT_DEV=null;
 function intCard(id,x,cn,editable,un){
@@ -659,7 +683,7 @@ function intCard(id,x,cn,editable,un){
 }
 async function renderIntenciones(){
   const cat=await loadCatalog();const conInt=cat.devociones.filter(k=>k.type!=="diaria");
-  if(!INT_DEV||!conInt.find(k=>k.id===INT_DEV))INT_DEV=await heroNovena();const id=INT_DEV;
+  if(!INT_DEV||!conInt.find(k=>k.id===INT_DEV))INT_DEV=await ultimaDev(["novena","coronilla"]);const id=INT_DEV;
   const dev=await loadDev(id),st=await devState(id),c=cur(st),un=u(dev);
   const devChips=`<div class="dev-chips">${conInt.map(k=>`<button class="${k.id===id?"on":""}" onclick="INT_DEV='${k.id}';INT_VIEW='actual';renderIntenciones()">${esc(k.short)}</button>`).join("")}</div>`;
   const anteriores=st.ciclos.filter(k=>k!==c&&(k.done.length||k.intenciones.length)).reverse();
@@ -699,12 +723,12 @@ function sheetIntencion(id){
 async function guardarInt(id){const t=$("#intTx").value.trim();if(!t)return;const st=await devState(id),c=cur(st);c.intenciones.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null});await Store.set(id,st);closeSheet();INT_VIEW="actual";toast("Intención guardada");P.reset();renderIntenciones();badge()}
 async function recibida(id,cn,iid,on){const st=await devState(id),k=st.ciclos.find(x=>x.n===cn),x=k.intenciones.find(i=>i.id===iid);x.recibida=on?hoyStr():null;await Store.set(id,st);if(on)toast("¡Gracias, Señor!");if(cn===cur(st).n)P.reset();renderIntenciones();badge()}
 async function borrarInt(id,cn,iid){const st=await devState(id),k=st.ciclos.find(x=>x.n===cn);k.intenciones=k.intenciones.filter(i=>i.id!==iid);await Store.set(id,st);P.reset();renderIntenciones();badge()}
-async function badge(){const id=await heroNovena(),st=await devState(id),n=activas(cur(st)).length;const b=$("#intBadge");b.textContent=n;b.classList.toggle("hidden",!n)}
+async function badge(){const cat=await loadCatalog();let n=0;for(const k of cat.devociones){if(k.type==="diaria")continue;const st=await devState(k.id);n+=activas(cur(st)).length}const b=$("#intBadge");b.textContent=n;b.classList.toggle("hidden",!n)}
 
 /* ================= Pantalla: Recordatorios ================= */
 let AJ_DEV=null;
 async function renderAjustes(){
-  const cat=await loadCatalog();if(!AJ_DEV)AJ_DEV=await heroNovena();const id=AJ_DEV;
+  const cat=await loadCatalog();if(!AJ_DEV)AJ_DEV=await ultimaDev();const id=AJ_DEV;
   const dev=await loadDev(id),st=await devState(id),c=cur(st);
   const chips=`<div class="dev-chips">${cat.devociones.map(k=>`<button class="${k.id===id?"on":""}" onclick="AJ_DEV='${k.id}';renderAjustes()">${esc(k.short)}</button>`).join("")}</div>`;
   const avisos=(gl,ics)=>`<div class="group-h">Avisos en tu teléfono</div><div class="group">
@@ -941,7 +965,7 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,rates:[1,1.15,1.3,.9],
     navigator.mediaSession.setActionHandler("play",()=>this.play());navigator.mediaSession.setActionHandler("pause",()=>this.stop());
     navigator.mediaSession.setActionHandler("nexttrack",()=>this.jump(this.i+1));navigator.mediaSession.setActionHandler("previoustrack",()=>this.jump(this.i-1))}catch(e){}}
 };
-async function openPlayer(id,n){
+async function openPlayer(id,n){marcarUso(id);
   const dev=await loadDev(id);
   if(dev.type==="coronilla"&&!(P.meta&&P.meta.id===id&&(P.playing||P.i>0&&P.i<P.items.length))){
     const st=await devState(id);let c=cur(st);
@@ -1015,7 +1039,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.17-29b98e";
+const APP_VERSION="2026.11.17-87dc1d";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
