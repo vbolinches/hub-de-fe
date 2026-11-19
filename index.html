@@ -237,6 +237,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .ly-int ul{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
 .ly-int li{font-family:var(--read);font-size:17px;line-height:1.45}
 .ly-int li::before{content:"♡ ";color:var(--rosa)}
+.ly-int li.dice{color:#FFE3EC;font-weight:600}.ly-int li.dice::before{content:"♥ "}
 .ly-int .cd{white-space:nowrap;margin-top:12px;display:flex;align-items:center;gap:10px;font-size:14px}
 .ly-int .cd button{margin-left:auto;padding:7px 14px;border-radius:14px;background:rgba(255,255,255,.16);font-weight:600;font-size:13.5px}
 .chips{display:flex;gap:6px;overflow-x:auto;padding:4px 20px 10px;scrollbar-width:none}
@@ -972,7 +973,7 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
       if(b.kind==="intenciones"){
         const idx=this.items.length;
         html+=`<div class="ly-int" id="ly${idx}" data-i="${idx}"><div class="h">Intenciones de esta ${u(dev)}</div>${ints.length?`<ul>${ints.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:`<div style="opacity:.8;margin-top:6px">Pide en silencio las gracias que deseas.</div>`}<div class="cd" id="cd${idx}">Un momento de silencio para tus peticiones</div></div>`;
-        this.items.push({kind:"pausa",title:"Intenciones",texts:ints,secs:15,cd:"cd"+idx,dur:(ints.join(" ").length/14)+15});return;
+        this.items.push({kind:"pausa",title:"Intenciones",texts:ints,secs:15,cd:"cd"+idx,el:"ly"+idx,dur:(ints.join(" ").length/14)+15});return;
       }
       if(b.title)html+=`<div class="ly head">${esc(b.kind==="lectura"&&dev.type==="novena"&&dev.id==="divino-nino"?day.label+": "+b.title:b.title)}</div>`;
       if(b.intro)this.items.push({kind:"audio",src:b.intro.audio,dur:b.intro.dur||3,title:secTitle,el:null});
@@ -1043,8 +1044,18 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
     const pr=aud.play();if(pr&&pr.catch)pr.catch(err=>{cl();this.playing=false;this.ui();toast("Toca el botón de reproducir para escuchar");rej(err)});
     const nx=this.items[this.i+1];if(nx&&nx.src&&nx.src!==src){const a=new Audio();a.preload="auto";a.src=nx.src}
   })},
+  /* Presenta las intenciones con la voz de los rezos (Salomé) cuando hay audio grabado: la frase de entrada y
+     las sugerencias. Lo que la persona escribió a mano lo lee la mejor voz en español del teléfono. */
+  async leerIntenciones(it,tk){const fr=await cargarFrases(),lis=[...document.querySelectorAll(`#${it.el||""} li`)];
+    const oir=async src=>{try{await this.audio(src,tk)}catch(e){}};
+    if(fr)await oir(fr.intro.audio);else await speakEs("Te presentamos nuestras intenciones.",tk,vel());
+    for(let k=0;k<it.texts.length;k++){if(tk!==this.tk)return;const t=it.texts[k],g=fr&&fr.sugerencias[t];
+      lis.forEach((l,j)=>l.classList.toggle("dice",j===k));
+      if(g)await oir(g.audio);else await speakEs(t+".",tk,vel());
+      if(tk!==this.tk)return;await new Promise(r=>setTimeout(r,450))}
+    lis.forEach(l=>l.classList.remove("dice"))},
   async pausa(it,tk){const cd=$("#"+it.cd);
-    if(it.texts.length){cd.textContent="Presentando tus intenciones…";await speakEs("Te presentamos nuestras intenciones. "+it.texts.join(". ")+".",tk,vel());if(tk!==this.tk)return}
+    if(it.texts.length){cd.textContent="Presentando tus intenciones…";await this.leerIntenciones(it,tk);if(tk!==this.tk)return}
     let s=it.secs;await new Promise(res=>{
       const draw=()=>{cd.innerHTML=`Silencio: <strong>${s}</strong> s <button class="skip" id="skipP">Continuar</button>`;const b=$("#skipP");if(b)b.onclick=ev=>{ev.stopPropagation();clearInterval(this.cd);res()}};
       draw();this.cd=setInterval(()=>{if(tk!==this.tk){clearInterval(this.cd);return res()}s--;if(s<=0){clearInterval(this.cd);return res()}draw()},1000)});
@@ -1125,7 +1136,7 @@ function cerrarMini(){if(P.playing)P.toggle();try{aud.pause()}catch(e){}P.tk=(P.
 function syncMini(){$("#app").classList.toggle("has-mini",!$("#mini").classList.contains("off"))}
 window.addEventListener("hashchange",()=>{const r=parseHash();if(!r.day)P.lastTab=r.tab||(r.nov||"hoy")});
 $("#pClose").onclick=()=>closePlayer(true);
-$("#pPlay").onclick=()=>P.toggle();
+$("#pPlay").onclick=()=>{activarVoz();P.toggle()};
 $("#pPrev").onclick=()=>P.jump(P.i-1);
 $("#pNext").onclick=()=>P.jump(P.i+1);
 $("#pSpeed").onclick=()=>sheetVelocidad();
@@ -1157,7 +1168,7 @@ async function probarVel(){ // si ya está sonando un rezo, se oye ahí mismo; s
 $("#pView").onclick=()=>$("#player").classList.toggle("cover");
 $("#pImgBtn").onclick=()=>{const on=$("#player").classList.toggle("cover");$("#pImgBtn").setAttribute("aria-label",on?"Volver al texto":"Ver la imagen en grande")};
 $("#pText").onclick=()=>{P.big=(P.big+1)%3;const s=[21,24,27][P.big];document.querySelectorAll(".ly:not(.head)").forEach(e=>e.style.fontSize=(e.classList.contains("verse")?s+2:s)+"px");P.focus()};
-$("#mini").onclick=e=>{if(e.target.closest("#miniX")){e.stopPropagation();cerrarMini();return}if(e.target.closest("#miniPP")){e.stopPropagation();P.toggle();return}go(P.meta.id+"-dia-"+P.meta.n)};
+$("#mini").onclick=e=>{if(e.target.closest("#miniX")){e.stopPropagation();cerrarMini();return}if(e.target.closest("#miniPP")){e.stopPropagation();activarVoz();P.toggle();return}go(P.meta.id+"-dia-"+P.meta.n)};
 
 async function finRezo(){
   const{id,n,type}=P.meta;const dev=await loadDev(id),st=await devState(id),c=cur(st);let html;
@@ -1183,20 +1194,26 @@ async function finRezo(){
 }
 
 /* Voz de las intenciones (texto del usuario) */
+let FRASES=null;
+function cargarFrases(){if(!FRASES)FRASES=fetch("frases.json").then(r=>r.ok?r.json():null).catch(()=>null);return FRASES}
+/* En iPhone la voz del teléfono solo funciona si se activó con un toque: se activa en el primer «reproducir» */
+let VOZ_LISTA=false;function activarVoz(){if(VOZ_LISTA||!("speechSynthesis" in window))return;VOZ_LISTA=true;try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}}
+function vozEs(){const vs=speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang));if(!vs.length)return null;
+  const reg=v=>/es[-_](CO|MX|US|419|AR|CL|PE|VE)/i.test(v.lang)?0:1,cal=v=>/natural|neural|premium|enhanced|mejorad/i.test(v.name)?0:/paulina|m[oó]nica|helena|google|sabina|juana|isabela/i.test(v.name)?1:2;
+  return vs.slice().sort((a,b)=>cal(a)-cal(b)||reg(a)-reg(b))[0]}
 async function speakEs(text,tk,rate){ // nunca espera más de lo razonable, aunque la voz del teléfono no responda
   const limite=new Promise(r=>setTimeout(r,Math.max(5000,text.length*110/rate)));
   return Promise.race([speakEs0(text,tk,rate),limite]);
 }
 async function speakEs0(text,tk,rate){
   if(caps.tts){try{await caps.tts.speak(text,{voice:"airy",rate:Math.max(.7,Math.min(1.5,rate*.95))});return}catch(e){if(tk!==P.tk)return}}
-  if("speechSynthesis" in window){await new Promise(res=>{const ut=new SpeechSynthesisUtterance(text);ut.lang="es-ES";ut.rate=.95*rate;
-    const vs=speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang));ut.voice=vs.find(v=>/natural|neural|premium|enhanced|paulina|m[oó]nica|helena|google/i.test(v.name))||vs[0]||null;
+  if("speechSynthesis" in window){await new Promise(res=>{const ut=new SpeechSynthesisUtterance(text);const vz=vozEs();ut.voice=vz;ut.lang=vz?vz.lang:"es-419";ut.rate=.95*rate;
     ut.onend=res;ut.onerror=res;speechSynthesis.speak(ut);const k=setInterval(()=>{if(tk!==P.tk){speechSynthesis.cancel();clearInterval(k);res()}},300)})}
 }
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.18-d452ab";
+const APP_VERSION="2026.11.19-e95b39";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;

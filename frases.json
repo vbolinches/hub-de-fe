@@ -1,0 +1,28 @@
+{
+ "intro": {
+  "audio": "audio/f2b50dff9f27.mp3",
+  "dur": 3.3
+ },
+ "sugerencias": {
+  "Por la salud de mi familia": {
+   "audio": "audio/69d1d000310e.mp3",
+   "dur": 2.6
+  },
+  "Por mi trabajo": {
+   "audio": "audio/734dad34961e.mp3",
+   "dur": 2.0
+  },
+  "Por la paz en mi hogar": {
+   "audio": "audio/f170f7d5cb02.mp3",
+   "dur": 2.3
+  },
+  "Por los enfermos": {
+   "audio": "audio/6a0c1f20cb94.mp3",
+   "dur": 2.1
+  },
+  "Por las almas del purgatorio": {
+   "audio": "audio/8c7715d71931.mp3",
+   "dur": 2.6
+  }
+ }
+}
