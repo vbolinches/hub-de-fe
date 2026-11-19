@@ -1,5 +1,5 @@
-/* Hub de Fe — service worker. Versión: 2026.11.19-e95b39 */
-const VERSION = "2026.11.19-e95b39";
+/* Hub de Fe — service worker. Versión: 2026.11.19-f5941d */
+const VERSION = "2026.11.19-f5941d";
 const CORE = "hubdefe-core-" + VERSION;
 const MEDIA = "hubdefe-audio-v2"; // v2: audios regenerados con tiempos por palabra
 const CORE_FILES = ["./", "index.html", "manifest.webmanifest", "catalog.json", "devociones/aguinaldos/data.json", "devociones/coronilla/data.json", "devociones/diarias/data.json", "devociones/divino-nino/data.json", "devociones/nudos/data.json", "devociones/rosario/data.json", "devociones/sangre/data.json", "img/aguinaldos.jpg", "img/coronilla.jpg", "img/d1.jpg", "img/d2.jpg", "img/d3.jpg", "img/d4.jpg", "img/d5.jpg", "img/d6.jpg", "img/d7.jpg", "img/d8.jpg", "img/d9.jpg", "img/diaria-1.jpg", "img/diaria-2.jpg", "img/diaria-3.jpg", "img/diarias.jpg", "img/divino-nino-cuadro.jpg", "img/divino-nino.jpg", "img/nudos.jpg", "img/rosario.jpg", "img/sangre.jpg", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-32.png", "icons/icon-512.png", "frases.json", "audio/f2b50dff9f27.mp3", "audio/69d1d000310e.mp3", "audio/734dad34961e.mp3", "audio/f170f7d5cb02.mp3", "audio/6a0c1f20cb94.mp3", "audio/8c7715d71931.mp3"];

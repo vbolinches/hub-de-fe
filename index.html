@@ -955,7 +955,14 @@ const VEL_N={75:"Muy despacio",80:"Despacio",85:"Pausado",90:"Algo pausado",95:"
 const velNombre=v=>VEL_N[Math.round(v*100)]||"Normal";
 const velPct=v=>Math.round(v*100)+" %";
 function vel(){let v=1;try{v=+localStorage.getItem("hubdefe:velocidad")||1}catch(e){}return VELS.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?b:a,1)}
-function setVel(v){try{localStorage.setItem("hubdefe:velocidad",v)}catch(e){}aud.playbackRate=v;if(typeof P!=="undefined")P.ui();const c=$("#velCell");if(c)c.textContent=velNombre(v)}
+function setVel(v){try{localStorage.setItem("hubdefe:velocidad",v)}catch(e){}aud.defaultPlaybackRate=v;aud.playbackRate=v;if(typeof P!=="undefined")P.ui();const c=$("#velCell");if(c)c.textContent=velNombre(v)}
+/* La velocidad guardada se aplica a cada audio. Safari en iPhone la vuelve a 1 al cargar un audio nuevo,
+   por eso también es la velocidad «por defecto» del reproductor y se reaplica al cargar y al empezar a sonar. */
+function aplicarVel(){const v=vel();aud.preservesPitch=aud.mozPreservesPitch=aud.webkitPreservesPitch=true;
+  if(aud.defaultPlaybackRate!==v)aud.defaultPlaybackRate=v;if(Math.abs(aud.playbackRate-v)>.001)aud.playbackRate=v}
+["loadedmetadata","canplay","play","playing"].forEach(ev=>aud.addEventListener(ev,aplicarVel));aplicarVel();
+/* Pedir al teléfono que no borre los datos (velocidad, intenciones, avance): Safari los borra tras 7 días sin uso si la app no está instalada */
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{})}catch(e){}
 /* Pausa extra entre oraciones al acelerar: así el paso de una oración a otra nunca se acorta */
 const pausaExtra=v=>v>1?Math.round((v-1)*1600):0;
 const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"hoy",elapsedBefore:[],total:0,
@@ -1036,12 +1043,15 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
     if(!aud.src.endsWith(src)){aud.src=src}
     const setT=()=>{try{aud.currentTime=seek}catch(e){}};
     if(aud.readyState>=1)setT();else if(seek>0)aud.addEventListener("loadedmetadata",setT,{once:true});else setT();
-    aud.preservesPitch=aud.mozPreservesPitch=aud.webkitPreservesPitch=true;aud.playbackRate=vel();
+    aplicarVel();
     const done=()=>{cl();res()},fail=()=>{cl();rej(new Error("audio"))};
     const cl=()=>{aud.removeEventListener("ended",done);aud.removeEventListener("error",fail);clearInterval(w)};
     const w=setInterval(()=>{if(tk!==this.tk){cl();res()}},250);
     aud.addEventListener("ended",done);aud.addEventListener("error",fail);
-    const pr=aud.play();if(pr&&pr.catch)pr.catch(err=>{cl();this.playing=false;this.ui();toast("Toca el botón de reproducir para escuchar");rej(err)});
+    const pr=aud.play();if(pr&&pr.catch)pr.catch(err=>{cl();
+      // Si otro toque ya cambió el audio (AbortError o un salto posterior), no es un fallo: el nuevo audio sigue sonando
+      if(tk!==this.tk){res();return}
+      this.playing=false;this.ui();toast("Toca el botón de reproducir para escuchar");rej(err)});
     const nx=this.items[this.i+1];if(nx&&nx.src&&nx.src!==src){const a=new Audio();a.preload="auto";a.src=nx.src}
   })},
   /* Presenta las intenciones con la voz de los rezos (Salomé) cuando hay audio grabado: la frase de entrada y
@@ -1213,7 +1223,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.19-e95b39";
+const APP_VERSION="2026.11.19-f5941d";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
