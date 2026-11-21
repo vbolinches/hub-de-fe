@@ -1091,7 +1091,7 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
         if(!src&&listo)src=await Promise.race([audioIntencion(t),new Promise(r=>setTimeout(()=>r(null),6000))]);
         if(!src)setTimeout(prepararVoces,500);
         if(tk!==this.tk)return;if(src)await oir(src);else await speakEs(t+".",tk,vel())}
-      if(tk!==this.tk)return;await new Promise(r=>setTimeout(r,450))}
+      if(tk!==this.tk)return} // sin pausa añadida: cada audio ya trae el mismo silencio final que las oraciones
     lis.forEach(l=>l.classList.remove("dice"))},
   async pausa(it,tk){const cd=$("#"+it.cd);
     if(it.texts.length){cd.textContent="Presentando tus intenciones…";await this.leerIntenciones(it,tk);if(tk!==this.tk)return}
@@ -1234,12 +1234,26 @@ const IDB={db:null,open(){return this.db||(this.db=new Promise((res,rej)=>{const
 let TTS=null,TTS_AVISO=false;
 function motorVoz(){if(!TTS)TTS=import("./vendor/vits.js").then(()=>window.tts).catch(e=>{TTS=null;throw e});return TTS}
 const URLS={};
-async function audioIntencion(texto,generar=true){const k=VOZ_ID+"|"+normInt(texto);
+/* Misma regla de pausas que la voz de los rezos: 0,20 s de silencio antes y 0,93 s después de cada frase
+   (medido en los audios de Salomé). La velocidad al hablar ya es la misma (±5 %). */
+async function rellenarWav(blob,lead=.20,tail=.93){try{const buf=new Uint8Array(await blob.arrayBuffer()),dv=new DataView(buf.buffer);
+  const sr=dv.getUint32(24,true),bps=dv.getUint16(34,true)/8*dv.getUint16(22,true);
+  let p=12;while(p<buf.length-8&&String.fromCharCode(...buf.subarray(p,p+4))!=="data")p+=8+dv.getUint32(p+4,true);
+  const datos=buf.subarray(p+8,p+8+dv.getUint32(p+4,true));
+  // quitar el silencio que ya trae (muestras casi en cero) y poner el de la regla
+  const pcm=new Int16Array(datos.buffer.slice(datos.byteOffset,datos.byteOffset+datos.byteLength)),um=328;
+  let a=0,b=pcm.length-1;while(a<b&&Math.abs(pcm[a])<um)a++;while(b>a&&Math.abs(pcm[b])<um)b--;
+  const voz=pcm.subarray(a,b+1),L=Math.round(lead*sr),T=Math.round(tail*sr),out=new Int16Array(L+voz.length+T);out.set(voz,L);
+  const h=new ArrayBuffer(44),w=new DataView(h),str=(o,t)=>{for(let i=0;i<4;i++)w.setUint8(o+i,t.charCodeAt(i))};
+  str(0,"RIFF");w.setUint32(4,36+out.byteLength,true);str(8,"WAVE");str(12,"fmt ");w.setUint32(16,16,true);w.setUint16(20,1,true);w.setUint16(22,1,true);
+  w.setUint32(24,sr,true);w.setUint32(28,sr*2,true);w.setUint16(32,2,true);w.setUint16(34,16,true);str(36,"data");w.setUint32(40,out.byteLength,true);
+  return new Blob([h,out.buffer],{type:"audio/wav"})}catch(e){return blob}}
+async function audioIntencion(texto,generar=true){const k=VOZ_ID+"|p2|"+normInt(texto);
   if(URLS[k])return URLS[k];
   try{let b=await IDB.get(k);
     if(!b&&generar){const tts=await motorVoz();
       if(!TTS_AVISO&&!(await tts.stored()).includes(VOZ_ID)){TTS_AVISO=true;toast("Preparando la voz que leerá tus intenciones…",3500,true)}
-      b=await tts.predict({text:texto.replace(/[.!?¡¿]*$/,"")+".",voiceId:VOZ_ID});if(b){await IDB.set(k,b);try{localStorage.setItem("hubdefe:voz-lista","1")}catch(e){}}}
+      b=await tts.predict({text:texto.replace(/[.!?¡¿]*$/,"")+".",voiceId:VOZ_ID});if(b)b=await rellenarWav(b);if(b){await IDB.set(k,b);try{localStorage.setItem("hubdefe:voz-lista","1")}catch(e){}}}
     if(b){URLS[k]=URL.createObjectURL(b);return URLS[k]}}catch(e){}
   return null}
 let PREP=null,PREP_OTRA=false;
@@ -1269,7 +1283,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.20-1361e6";
+const APP_VERSION="2026.11.21-5056e0";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
