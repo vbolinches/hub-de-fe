@@ -304,6 +304,7 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .pick-h{margin-top:18px;font-size:13.5px;font-weight:600;color:var(--ink-2)}
 .picks{display:flex;flex-direction:column;gap:8px;margin-top:8px}
 .pick{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;background:var(--bg);cursor:pointer}
+.pick.big{min-height:56px;align-items:center;font-size:17px}.pick.big input{width:26px;height:26px;flex:none;accent-color:var(--cenidor)}
 .pick input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--rosa);flex:none}
 .pick .pt{overflow-wrap:anywhere;display:block;font-family:var(--read);font-size:16px;line-height:1.45}
 .pick .ps{display:block;font-size:12.5px;color:#8A6411;margin-top:2px}
@@ -572,11 +573,38 @@ async function devState(id){
     await Store.set(id,st);
   }
   if(dev.type==="diaria"&&(!st.hoy||st.hoy.fecha!==hoyStr())){st.hoy={fecha:hoyStr(),done:[]}}
+  if(dev.type!=="diaria")hidratar(st,await misInt());
   return st;
 }
 const cur=st=>st.ciclos[st.ciclos.length-1];
+/* ===== Intenciones: una sola lista por persona, para todos los rezos =====
+   doc "intenciones" = {lista:[{id,texto,fecha,recibida}]}. Cada ciclo (novena, rosario, coronilla) guarda en
+   ciclo.intenciones las que se eligieron para él, con el mismo id; el texto y «gracia recibida» viven en la lista general. */
+const normInt=t=>t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9ñ]+/g," ").trim();
+let MIGRANDO=null;
+async function misInt(){const d=await Store.get("intenciones");
+  if(Array.isArray(d.lista))return d;
+  if(!MIGRANDO)MIGRANDO=(async()=>{ // primera vez: juntar las intenciones que ya estaban en cada rezo
+    const cat=await loadCatalog(),lista=[],por={};
+    for(const k of cat.devociones){const st=await Store.get(k.id);if(!Array.isArray(st.ciclos))continue;let cambio=false;
+      for(const c of st.ciclos)for(const x of (Array.isArray(c.intenciones)?c.intenciones:[])){if(!x||typeof x.texto!=="string"||!x.texto.trim())continue;
+        const n=normInt(x.texto);let g=por[n];
+        if(!g){g={id:x.id||uid(),texto:x.texto.trim(),fecha:x.fecha||hoyStr(),recibida:x.recibida||null};por[n]=g;lista.push(g)}
+        else if((x.fecha||"9")<g.fecha){g.texto=x.texto.trim();g.fecha=x.fecha} // se queda el texto más antiguo
+        else if(x.recibida&&!g.recibida)g.recibida=x.recibida;
+        if(x.id!==g.id){x.id=g.id;cambio=true}}
+      if(cambio)await Store.set(k.id,st)}
+    lista.sort((a,b)=>a.fecha.localeCompare(b.fecha));const nd={lista};await Store.set("intenciones",nd);return nd})();
+  return MIGRANDO}
+function hidratar(st,G){const by=Object.fromEntries(G.lista.map(g=>[g.id,g]));
+  for(const c of st.ciclos)for(const x of c.intenciones){const g=by[x.id];if(g){x.texto=g.texto;x.recibida=g.recibida;delete x.borrada}else x.borrada=true}}
+async function agregarInt(textos){const G=await misInt(),ids=[];
+  for(const t of textos){const n=normInt(t);if(!n)continue;let g=G.lista.find(x=>normInt(x.texto)===n&&!x.recibida);
+    if(!g){g={id:uid(),texto:t.trim(),fecha:hoyStr(),recibida:null};G.lista.push(g)}ids.push(g.id)}
+  await Store.set("intenciones",G);setTimeout(prepararVoces,300);return ids}
+const activasG=G=>G.lista.filter(x=>!x.recibida);
 window.addEventListener("storage",e=>{if(e.key&&e.key.startsWith("hubdefe:")&&!parseHash().day){Store.cache={};onRoute()}});
-const activas=c=>c.intenciones.filter(x=>!x.recibida);
+const activas=c=>c.intenciones.filter(x=>!x.recibida&&!x.borrada);
 let caps={};
 
 /* ================= Datos ================= */
@@ -691,35 +719,45 @@ async function renderHoy(){
   badge();
 }
 
-/* ================= Nuevo ciclo (nueva novena) ================= */
-async function sheetNuevoCiclo(id){
-  const dev=await loadDev(id),st=await devState(id),c=cur(st),e=estado(dev,c);
-  const prev=c.intenciones;
-  const lista=prev.length?prev.map(x=>`<label class="pick"><input type="checkbox" value="${x.id}" ${x.recibida?"":"checked"}><span><span class="pt">${esc(x.texto)}</span>${x.recibida?`<span class="ps">Gracia recibida el ${fechaCorta(parseYmd(x.recibida))}</span>`:""}</span></label>`).join("")
-    :`<div class="sub" style="margin-top:8px">La novena anterior no tenía intenciones escritas.</div>`;
+/* ================= Elegir intenciones antes de rezar =================
+   modo "rezo": antes de cada Rosario o Coronilla · "inicio": antes del primer día de una novena
+   modo "nueva": empezar otra novena (con fecha) · "editar": cambiar las de la novena en curso */
+async function sheetElegirInt(id,n,modo){
+  const dev=await loadDev(id),st=await devState(id),c=cur(st),G=await misInt(),un=u(dev);
+  let pre=new Set(activas(c).map(x=>x.id));
+  if(!pre.size){const ant=[...st.ciclos].reverse().find(k=>k!==c&&k.intenciones.length);if(ant)pre=new Set(ant.intenciones.filter(x=>!x.recibida&&!x.borrada).map(x=>x.id))}
+  const lista=activasG(G);
   const ini=dev.fixedStart?proximoFijo(dev.fixedStart):hoyStr();
-  openSheet(`<h3>Nueva novena</h3>
-    <div class="sub">${esc(dev.title)}. ${e.completa?`Terminaste la novena #${c.n}.`:`La novena #${c.n} va en el día ${e.done.size} de 9 y quedará guardada en tu historial.`} Elige qué intenciones mantienes y añade las nuevas.</div>
-    ${prev.length?`<div class="pick-h">Intenciones de la novena #${c.n}</div><div class="picks">${lista}</div>`:lista}
-    <div class="pick-h">Nueva intención</div>
-    <textarea id="ncTx" placeholder="En esta novena te pido por…" maxlength="600" style="min-height:84px;margin-top:6px"></textarea>
-    ${sugsHtml("ncTx")}
-    <div class="pick-h">Día primero</div>
-    <input type="date" id="ncStart" value="${ini}" class="date-in">
-    <button class="btn-p" onclick="crearCiclo('${id}')">Empezar la novena #${c.n+1}</button>`);
-  conSugs("ncTx");
+  const tit=modo==="nueva"?"Nueva novena":modo==="editar"?"Intenciones de esta novena":"¿Por qué intenciones rezas?";
+  const sub=modo==="nueva"?`${esc(dev.title)}. Elige tus intenciones para la novena #${c.n+1} o escribe una nueva.`
+    :modo==="editar"?"Marca las intenciones que presentas en esta novena. La voz las lee cada día."
+    :`Marca las de tu lista o escribe una nueva. La voz las presentará durante ${dev.type==="novena"?"cada día de la novena":esta(dev)+" "+un}.`;
+  openSheet(`<h3>${tit}</h3><div class="sub">${sub}</div>
+    ${lista.length?`<div class="pick-h">Tus intenciones</div><div class="picks" id="elPicks">${lista.map(x=>`<label class="pick big"><input type="checkbox" value="${x.id}" ${pre.has(x.id)?"checked":""}><span><span class="pt">${esc(x.texto)}</span><span class="ps">Desde el ${fechaCorta(parseYmd(x.fecha))}</span></span></label>`).join("")}</div>`:""}
+    <div class="pick-h">${lista.length?"O escribe una nueva":"Escribe tu intención"}</div>
+    <textarea id="elTx" placeholder="Te pido por…" maxlength="600" style="min-height:76px;margin-top:6px"></textarea>
+    ${sugsHtml("elTx")}
+    ${modo==="nueva"?`<div class="pick-h">Día primero</div><input type="date" id="elStart" value="${ini}" class="date-in">`:""}
+    <button class="btn-p" id="elOk" onclick="elegirOk('${id}',${n||0},'${modo}',true)">Empezar a rezar</button>
+    ${modo==="editar"?"":`<button class="btn-p ghost" onclick="elegirOk('${id}',${n||0},'${modo}',false)">Rezar sin intención</button>`}`);
+  const cuenta=()=>{const k=document.querySelectorAll("#elPicks input:checked").length+lineas($("#elTx").value).length;
+    $("#elOk").textContent=modo==="editar"?(k?`Guardar ${k} ${k===1?"intención":"intenciones"}`:"Guardar sin intenciones"):modo==="nueva"?`Empezar la novena #${c.n+1}${k?` con ${k} ${k===1?"intención":"intenciones"}`:""}`:k?`Empezar a rezar con ${k} ${k===1?"intención":"intenciones"}`:"Empezar a rezar"};
+  document.querySelectorAll('.sugs[data-for="elTx"] button').forEach((b,k)=>{if(lista.some(x=>normInt(x.texto)===normInt(SUGS[k])))b.hidden=true}); // ya están en su lista
+  conSugs("elTx",cuenta);document.querySelectorAll("#elPicks input").forEach(i=>i.onchange=cuenta);cuenta();
 }
-async function crearCiclo(id){
-  const dev=await loadDev(id),st=await devState(id),c=cur(st);
-  const keep=[...document.querySelectorAll('.picks input:checked')].map(i=>i.value);
-  const ints=c.intenciones.filter(x=>keep.includes(x.id)).map(x=>({id:uid(),texto:x.texto,fecha:hoyStr(),recibida:null,desde:c.n}));
-  lineas($("#ncTx").value).forEach(t=>ints.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null}));
-  if(!c.fin)c.fin=hoyStr();
-  st.ciclos.push(mkCiclo(c.n+1,$("#ncStart").value||hoyStr(),ints));
-  await Store.set(id,st);closeSheet();P.reset();
-  toast(`Novena #${c.n+1} iniciada con ${ints.length} ${ints.length===1?"intención":"intenciones"}`,3200);
-  go("hoy");
-}
+async function elegirOk(id,n,modo,usar){
+  let ids=usar?[...document.querySelectorAll("#elPicks input:checked")].map(i=>i.value):[];
+  if(usar){const nuevos=await agregarInt(lineas($("#elTx").value||""));nuevos.forEach(x=>{if(!ids.includes(x))ids.push(x)})}
+  const G=await misInt(),by=Object.fromEntries(G.lista.map(g=>[g.id,g]));
+  const sel=ids.filter(x=>by[x]).map(x=>({id:x,texto:by[x].texto,fecha:hoyStr(),recibida:null}));
+  const st=await devState(id);let c=cur(st);
+  if(modo==="nueva"){if(!c.fin)c.fin=hoyStr();const nc=mkCiclo(c.n+1,($("#elStart")&&$("#elStart").value)||hoyStr(),sel);nc.preguntado=true;st.ciclos.push(nc);c=nc}
+  else{c.intenciones=sel;c.preguntado=true}
+  await Store.set(id,st);closeSheet();P.reset();badge();
+  if(modo==="nueva"){toast(`Novena #${c.n} iniciada${sel.length?` con ${sel.length} ${sel.length===1?"intención":"intenciones"}`:""}`,3200);go(id);return}
+  if(modo==="editar"){toast(sel.length?`${sel.length} ${sel.length===1?"intención":"intenciones"} en esta novena`:"Novena sin intenciones",2200);if(TAB==="intenciones")renderIntenciones();else onRoute();return}
+  P.meta=null;if(location.hash!=="#"+id+"-dia-"+n)location.hash=id+"-dia-"+n;else openPlayer(id,n)}
+function sheetNuevoCiclo(id){return sheetElegirInt(id,0,"nueva")}
 
 /* ================= Pantalla de una devoción ================= */
 async function renderDev(id){
@@ -741,7 +779,7 @@ async function renderDev(id){
       const f=c.start?fecha(addDays(parseYmd(c.start),d.n-1)):`${d.mins} min`;
       return `<button class="tl ${done?"done":""} ${next?"next":""}" onclick="go('${id}-dia-${d.n}')"><span class="num">${done?I.check:d.n}</span><img src="${d.img}" alt=""><span><div class="tt">${esc(d.title)}</div><div class="dd">${esc(d.label)}, ${esc(f)}</div></span><span class="go">${I.play}</span></button>`}).join("");
     paint(`${top}${custodia(dev,e)}${cab}
-      <button class="row-card" onclick="INT_DEV='${id}';INT_VIEW='actual';go('intenciones')"><span class="ic" style="background:var(--rosa-2);color:var(--rosa-txt)">${I.heart}</span><span><span class="t">${act.length?act.length+(act.length===1?" intención":" intenciones")+" en esta novena":"Escribe las intenciones de esta novena"}</span><div class="s">${act.length?esc(act[0].texto.slice(0,46))+(act[0].texto.length>46||act.length>1?"…":""):"Se presentan cada día"}</div></span><span class="chev">${I.chev}</span></button>
+      <button class="row-card" onclick="sheetElegirInt('${id}',0,'editar')"><span class="ic" style="background:var(--rosa-2);color:var(--rosa-txt)">${I.heart}</span><span><span class="t">${act.length?act.length+(act.length===1?" intención":" intenciones")+" en esta novena":"Escribe las intenciones de esta novena"}</span><div class="s">${act.length?esc(act[0].texto.slice(0,46))+(act[0].texto.length>46||act.length>1?"…":""):"Elige de tu lista; la voz las presenta cada día"}</div></span><span class="chev">${I.chev}</span></button>
       <button class="row-card" onclick="AJ_DEV='${id}';go('ajustes')"><span class="ic" style="background:var(--oro-2);color:#8A6411">${I.clock}</span><span><span class="t">Recordatorio</span><div class="s">${c.start?esc(`${fecha(addDays(parseYmd(c.start),(e.sig?e.sig.n:1)-1))} a las ${hora12(st.hora)}`):"Elige la fecha de inicio y la hora"}</div></span><span class="chev">${I.chev}</span></button>
       ${!e.completa&&pr?`<div class="practica"><h2 class="h3">Práctica del día</h2><p>${esc(pr.paras[0].text)}</p></div>`:""}
       <div class="section">Los nueve días</div>
@@ -775,41 +813,29 @@ async function renderDev(id){
 async function renderDevociones(){return go("hoy")}
 /* ================= Pantalla: Intenciones (por devoción y por rezo) ================= */
 let INT_VIEW="actual",INT_DEV=null;
-function intCard(id,x,cn,editable,un){
-  return `<div class="int ${x.recibida?"ok":""}"><div class="tx">${esc(x.texto)}<div class="when">${x.recibida?"Gracia recibida el "+fechaCorta(parseYmd(x.recibida)):x.desde?`Viene de la ${un} #${x.desde}`:"Desde el "+fechaCorta(parseYmd(x.fecha))}</div></div>
-    <div class="acts">${x.recibida?`<button class="icon-btn" title="Desmarcar" aria-label="Quitar marca de gracia recibida" onclick="recibida('${id}',${cn},'${x.id}',false)">${I.loop}</button>`:`<button class="icon-btn gold" title="Gracia recibida" aria-label="Marcar como gracia recibida" onclick="recibida('${id}',${cn},'${x.id}',true)">${I.check}</button>`}${editable?`<button class="icon-btn" aria-label="Borrar" onclick="borrarInt('${id}',${cn},'${x.id}')">${I.trash}</button>`:""}</div></div>`;
-}
+async function dondeSeReza(){ // id de intención → rezos en curso donde está elegida
+  const cat=await loadCatalog(),m={};
+  for(const k of cat.devociones){if(k.type==="diaria")continue;const dev=await loadDev(k.id),st=await devState(k.id),c=cur(st);
+    const enCurso=dev.type==="novena"?!estado(dev,c).completa:!c.fin;if(!enCurso)continue;
+    for(const x of activas(c))(m[x.id]=m[x.id]||[]).push(k.short)}
+  return m}
 async function renderIntenciones(){
-  const cat=await loadCatalog();const conInt=cat.devociones.filter(k=>k.type!=="diaria");
-  if(!INT_DEV||!conInt.find(k=>k.id===INT_DEV))INT_DEV=await ultimaDev(["novena","coronilla","rosario"]);const id=INT_DEV;
-  const dev=await loadDev(id),st=await devState(id),c=cur(st),un=u(dev);
-  const devChips=`<div class="dev-chips">${conInt.map(k=>`<button class="${k.id===id?"on":""}" onclick="INT_DEV='${k.id}';INT_VIEW='actual';renderIntenciones()">${esc(k.short)}</button>`).join("")}</div>`;
-  const anteriores=st.ciclos.filter(k=>k!==c&&(k.done.length||k.intenciones.length)).reverse();
-  let body;
-  if(INT_VIEW==="actual"){
-    let estadoTxt,dots="",cerrada=false;
-    if(dev.type==="novena"){const e=estado(dev,c);cerrada=e.completa;
-      estadoTxt=e.completa?`Terminada${c.fin?" el "+fechaCorta(parseYmd(c.fin)):""}`:c.start?(e.empieza?`Empieza el ${fechaCorta(parseYmd(c.start))}`:`Día ${e.sig.n} de 9, desde el ${fechaCorta(parseYmd(c.start))}`):"Sin empezar";
-      dots=`<div class="cy-dots">${dev.days.map(d=>`<i class="${e.done.has(d.n)?"on":""}"></i>`).join("")}</div>`;
-    }else{cerrada=!!c.fin;estadoTxt=c.fin?`${rezadaA(dev)} el ${fechaCorta(parseYmd(c.fin))}`:MASC(dev)?"El próximo que reces":"La próxima que reces"}
-    const nuevo=dev.type==="novena"?`<button class="row-card" style="background:var(--noche);color:#fff" onclick="sheetNuevoCiclo('${id}')"><span class="ic" style="background:var(--oro);color:var(--noche)">${I.loop}</span><span><span class="t">Empezar una nueva novena</span><div class="s" style="color:rgba(255,255,255,.75)">Mantén estas intenciones o cámbialas</div></span><span class="chev" style="color:#fff">${I.chev}</span></button>`
-      :`<button class="row-card" style="background:var(--noche);color:#fff" onclick="go('${id}-dia-${misterioHoy(dev)}')"><span class="ic" style="background:var(--oro);color:var(--noche)">${I.play}</span><span><span class="t">Rezar ${otra(dev)} ${un}</span><div class="s" style="color:rgba(255,255,255,.75)">Te pediremos su intención</div></span><span class="chev" style="color:#fff">${I.chev}</span></button>`;
-    body=`<div class="cycle"><div><div class="cy-t">${U(dev)} #${c.n}</div><div class="cy-s">${esc(estadoTxt)}</div></div>${dots}</div>
-      ${cerrada?nuevo:""}
-      ${c.intenciones.length?c.intenciones.map(x=>intCard(id,x,c.n,true,un)).join(""):`<div class="empty"><div class="big">¿Por qué intención rezas ${esta(dev)} ${un}?</div>${dev.type==="novena"?"La voz presenta tus intenciones cada día y deja un momento de silencio.":"Cada rezo lleva su motivo. Escríbelo antes de empezar."}</div>`}`;
-  }else{
-    body=anteriores.length?anteriores.map(k=>{const ok=k.intenciones.filter(x=>x.recibida).length;
-      const when=k.start&&k.fin?rango(k.start,k.fin):k.fin?fecha(parseYmd(k.fin)):k.start?"Desde el "+fechaCorta(parseYmd(k.start)):"";
-      return `<div class="hist-h"><div class="cy-t">${U(dev)} #${k.n}</div><div class="cy-s">${esc(when)}${dev.type==="novena"?` · ${k.done.length} de 9 días`:""}${k.intenciones.length?` · ${ok} de ${k.intenciones.length} gracias recibidas`:""}</div></div>
-        ${k.intenciones.length?k.intenciones.map(x=>intCard(id,x,k.n,false,un)).join(""):`<div class="sub pad" style="margin-top:6px">Sin intenciones escritas.</div>`}`}).join("")
-      :`<div class="empty"><div class="big">Aún no hay ${un==="oración"?"oraciones":un+"s"} anteriores</div>Aquí quedarán sus intenciones y las gracias recibidas.</div>`;
-  }
-  paint(`<div class="screen-title">Intenciones</div>${devChips}
-    <div class="seg"><button class="${INT_VIEW==="actual"?"on":""}" onclick="INT_VIEW='actual';renderIntenciones()">${U(dev)} #${c.n}</button><button class="${INT_VIEW==="hist"?"on":""}" onclick="INT_VIEW='hist';renderIntenciones()">Anteriores (${anteriores.length})</button></div>
-    ${body}`);
-  const cerrada=dev.type==="novena"?estado(dev,c).completa:!!c.fin;
-  if(INT_VIEW==="actual"&&!cerrada)$("#screen").insertAdjacentHTML("beforeend",`<button class="fab" onclick="sheetIntencion('${id}')">${I.plus}Nueva intención</button>`);
+  const G=await misInt(),act=activasG(G).slice().reverse(),rec=G.lista.filter(x=>x.recibida).sort((a,b)=>b.recibida.localeCompare(a.recibida));
+  const donde=await dondeSeReza();
+  const card=x=>`<div class="int ${x.recibida?"ok":""}"><div class="tx">${esc(x.texto)}<div class="when">${x.recibida?"Gracia recibida el "+fechaCorta(parseYmd(x.recibida)):donde[x.id]?"Rezando en: "+esc(donde[x.id].join(", ")):"Desde el "+fechaCorta(parseYmd(x.fecha))}</div></div>
+    <div class="acts">${x.recibida?`<button class="icon-btn" aria-label="Quitar la marca de gracia recibida" onclick="recibidaG('${x.id}',false)">${I.loop}</button>`:`<button class="icon-btn gold" aria-label="Marcar como gracia recibida" onclick="recibidaG('${x.id}',true)">${I.check}</button>`}<button class="icon-btn" aria-label="Borrar" onclick="borrarG('${x.id}')">${I.trash}</button></div></div>`;
+  paint(`<div class="screen-title">Mis intenciones</div>
+    <div class="sub pad">Una sola lista para todos tus rezos. Al empezar una novena, un Rosario o una Coronilla eliges por cuáles rezas, y la voz las presenta.</div>
+    ${act.length?`<h2 class="sec">Por las que pido</h2>${act.map(card).join("")}`:`<div class="empty"><div class="big">Aún no tienes intenciones</div>Escribe aquí por quién o por qué rezas. Las podrás elegir al empezar cada rezo.</div>`}
+    ${rec.length?`<h2 class="sec">Gracias recibidas</h2>${rec.map(card).join("")}`:""}
+    <div style="height:90px"></div>`);
+  $("#screen").insertAdjacentHTML("beforeend",`<button class="fab" onclick="sheetIntencion()">${I.plus}Nueva intención</button>`);
 }
+async function recibidaG(iid,on){const G=await misInt(),x=G.lista.find(i=>i.id===iid);if(!x)return;x.recibida=on?hoyStr():null;await Store.set("intenciones",G);if(on)toast("¡Gracias, Señor!");P.reset();renderIntenciones();badge()}
+async function borrarG(iid){const G=await misInt(),x=G.lista.find(i=>i.id===iid);if(!x)return;
+  if(!confirmar(`¿Borrar «${x.texto}» de tu lista?`))return;
+  G.lista=G.lista.filter(i=>i.id!==iid);await Store.set("intenciones",G);P.reset();renderIntenciones();badge()}
+function confirmar(t){try{return window.confirm(t)}catch(e){return true}}
 /* Sugerencias de intención: se pueden marcar varias; cada una se agrega en su propia línea debajo de lo escrito */
 const SUGS=["Por la salud de mi familia","Por mi trabajo","Por la paz en mi hogar","Por los enfermos","Por las almas del purgatorio"];
 const lineas=v=>v.split("\n").map(x=>x.trim()).filter(Boolean);
@@ -822,18 +848,15 @@ function syncSugs(tx){const t=$("#"+tx),box=document.querySelector(`.sugs[data-f
   box.querySelectorAll("button").forEach((b,k)=>{const on=ls.includes(SUGS[k]);b.classList.toggle("on",on);b.setAttribute("aria-pressed",on);b.querySelector(".ck").textContent=on?"✓":"+"});
   t.style.height="auto";t.style.height=Math.min(220,t.scrollHeight+2)+"px"}
 function conSugs(tx,extra){const t=$("#"+tx);if(!t)return;t.addEventListener("input",()=>{syncSugs(tx);extra&&extra()})}
-function sheetIntencion(id){
+function sheetIntencion(){
   openSheet(`<h3>Nueva intención</h3><div class="sub">Escríbela como se la dirías a Dios, o toca una o varias sugerencias.</div>
     <textarea id="intTx" placeholder="Te pido por…" maxlength="600"></textarea>
     ${sugsHtml("intTx")}
-    <button class="btn-p" id="intOk" disabled onclick="guardarInt('${id}')">Guardar intención</button>`);
+    <button class="btn-p" id="intOk" disabled onclick="guardarInt()">Guardar intención</button>`);
   const t=$("#intTx");conSugs("intTx",()=>{const n=lineas(t.value).length;$("#intOk").disabled=!n;$("#intOk").textContent=n>1?`Guardar ${n} intenciones`:"Guardar intención"});setTimeout(()=>t.focus(),350);
 }
-async function guardarInt(id){const ls=lineas($("#intTx").value);if(!ls.length)return;const st=await devState(id),c=cur(st);
-  ls.forEach(t=>c.intenciones.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null}));await Store.set(id,st);closeSheet();INT_VIEW="actual";toast(ls.length>1?`${ls.length} intenciones guardadas`:"Intención guardada");P.reset();renderIntenciones();badge()}
-async function recibida(id,cn,iid,on){const st=await devState(id),k=st.ciclos.find(x=>x.n===cn),x=k.intenciones.find(i=>i.id===iid);x.recibida=on?hoyStr():null;await Store.set(id,st);if(on)toast("¡Gracias, Señor!");if(cn===cur(st).n)P.reset();renderIntenciones();badge()}
-async function borrarInt(id,cn,iid){const st=await devState(id),k=st.ciclos.find(x=>x.n===cn);k.intenciones=k.intenciones.filter(i=>i.id!==iid);await Store.set(id,st);P.reset();renderIntenciones();badge()}
-async function badge(){const cat=await loadCatalog();let n=0;for(const k of cat.devociones){if(k.type==="diaria")continue;const st=await devState(k.id);n+=activas(cur(st)).length}const b=$("#intBadge");b.textContent=n;b.classList.toggle("hidden",!n)}
+async function guardarInt(){const ls=lineas($("#intTx").value);if(!ls.length)return;await agregarInt(ls);closeSheet();toast(ls.length>1?`${ls.length} intenciones guardadas`:"Intención guardada");P.reset();renderIntenciones();badge()}
+async function badge(){const n=activasG(await misInt()).length;const b=$("#intBadge");b.textContent=n;b.classList.toggle("hidden",!n)}
 
 /* ================= Pantalla: Recordatorios ================= */
 let AJ_DEV=null;
@@ -961,6 +984,7 @@ function setVel(v){try{localStorage.setItem("hubdefe:velocidad",v)}catch(e){}aud
 function aplicarVel(){const v=vel();aud.preservesPitch=aud.mozPreservesPitch=aud.webkitPreservesPitch=true;
   if(aud.defaultPlaybackRate!==v)aud.defaultPlaybackRate=v;if(Math.abs(aud.playbackRate-v)>.001)aud.playbackRate=v}
 ["loadedmetadata","canplay","play","playing"].forEach(ev=>aud.addEventListener(ev,aplicarVel));aplicarVel();
+setTimeout(()=>{try{prepararVoces()}catch(e){}},4000);
 /* Pedir al teléfono que no borre los datos (velocidad, intenciones, avance): Safari los borra tras 7 días sin uso si la app no está instalada */
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{})}catch(e){}
 /* Pausa extra entre oraciones al acelerar: así el paso de una oración a otra nunca se acorta */
@@ -1061,7 +1085,12 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
     if(fr)await oir(fr.intro.audio);else await speakEs("Te presentamos nuestras intenciones.",tk,vel());
     for(let k=0;k<it.texts.length;k++){if(tk!==this.tk)return;const t=it.texts[k],g=fr&&fr.sugerencias[t];
       lis.forEach((l,j)=>l.classList.toggle("dice",j===k));
-      if(g)await oir(g.audio);else await speakEs(t+".",tk,vel());
+      if(g)await oir(g.audio);
+      else{ // audio ya preparado; si falta y el modelo de voz ya está en el teléfono, se genera al momento (máx. 6 s)
+        let src=await audioIntencion(t,false);let listo=false;try{listo=localStorage.getItem("hubdefe:voz-lista")==="1"}catch(e){}
+        if(!src&&listo)src=await Promise.race([audioIntencion(t),new Promise(r=>setTimeout(()=>r(null),6000))]);
+        if(!src)setTimeout(prepararVoces,500);
+        if(tk!==this.tk)return;if(src)await oir(src);else await speakEs(t+".",tk,vel())}
       if(tk!==this.tk)return;await new Promise(r=>setTimeout(r,450))}
     lis.forEach(l=>l.classList.remove("dice"))},
   async pausa(it,tk){const cd=$("#"+it.cd);
@@ -1115,25 +1144,16 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
 };
 async function openPlayer(id,n){marcarUso(id);
   const dev=await loadDev(id);
-  if(SES(dev.type)&&!(P.meta&&P.meta.id===id&&(P.playing||P.i>0&&P.i<P.items.length))){
+  if(dev.type!=="diaria"&&!(P.meta&&P.meta.id===id&&(P.playing||P.i>0&&P.i<P.items.length))){
     const st=await devState(id);let c=cur(st);
-    if(c.fin){st.ciclos.push(mkCiclo(c.n+1,hoyStr()));await Store.set(id,st);c=cur(st);P.meta=null}
-    if(!activas(c).length&&P.asked!==id+c.n){P.asked=id+c.n;return sheetIntencionAntes(id,n)}
+    if(SES(dev.type)&&c.fin){st.ciclos.push(mkCiclo(c.n+1,hoyStr()));await Store.set(id,st);c=cur(st);P.meta=null}
+    // Antes de cada Rosario o Coronilla, y antes del primer día de cada novena: ¿por qué intenciones rezas?
+    const nueva=SES(dev.type)||(!c.done.length&&!c.fin);
+    if(nueva&&!c.preguntado){P.meta=null;return sheetElegirInt(id,n,SES(dev.type)?"rezo":"inicio")}
   }
   if(!P.meta||P.meta.id!==id||P.meta.n!==n){P.stop();await P.load(id,n)}
   $("#player").classList.add("open");$("#mini").classList.add("off");syncMini();setTimeout(()=>P.focus(),450);
 }
-async function sheetIntencionAntes(id,n){const dev=await loadDev(id),un=u(dev);
-  openSheet(`<h3>¿Por qué intención rezas?</h3><div class="sub">Cada ${un} lleva su motivo. Se presentará al empezar.</div>
-    <textarea id="antesTx" placeholder="Rezo ${esta(dev)} ${un} por…" maxlength="600"></textarea>
-    ${sugsHtml("antesTx")}
-    <button class="btn-p" onclick="antesOk('${id}',${n},true)">Empezar a rezar</button>
-    <button class="btn-p ghost" onclick="antesOk('${id}',${n},false)">Rezar sin escribir intención</button>`);
-  conSugs("antesTx");setTimeout(()=>$("#antesTx")&&$("#antesTx").focus(),350);
-}
-async function antesOk(id,n,usar){const ls=lineas($("#antesTx").value||"");
-  if(usar&&ls.length){const st=await devState(id);ls.forEach(t=>cur(st).intenciones.push({id:uid(),texto:t,fecha:hoyStr(),recibida:null}));await Store.set(id,st)}
-  closeSheet();P.meta=null;if(location.hash!=="#"+id+"-dia-"+n)location.hash=id+"-dia-"+n;else openPlayer(id,n)}
 function closePlayer(nav=true){
   if(!$("#player").classList.contains("open"))return;
   $("#player").classList.remove("open");
@@ -1204,10 +1224,36 @@ async function finRezo(){
 }
 
 /* Voz de las intenciones (texto del usuario) */
+/* Las intenciones escritas a mano se convierten en audio dentro del teléfono (voz neural en español, Piper es_MX)
+   al guardarlas, y el audio queda en IndexedDB. Así se oyen como cualquier oración: aunque el iPhone esté en
+   silencio, con la velocidad elegida y sin internet. La voz del teléfono queda solo como respaldo. */
+const VOZ_ID="es_MX-claude-high";
+const IDB={db:null,open(){return this.db||(this.db=new Promise((res,rej)=>{const r=indexedDB.open("hubdefe-voz",1);r.onupgradeneeded=()=>r.result.createObjectStore("audio");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
+  async get(k){const db=await this.open();return new Promise(res=>{const q=db.transaction("audio").objectStore("audio").get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})},
+  async set(k,v){const db=await this.open();return new Promise(res=>{const t=db.transaction("audio","readwrite");t.objectStore("audio").put(v,k);t.oncomplete=()=>res(true);t.onerror=()=>res(false)})}};
+let TTS=null,TTS_AVISO=false;
+function motorVoz(){if(!TTS)TTS=import("./vendor/vits.js").then(()=>window.tts).catch(e=>{TTS=null;throw e});return TTS}
+const URLS={};
+async function audioIntencion(texto,generar=true){const k=VOZ_ID+"|"+normInt(texto);
+  if(URLS[k])return URLS[k];
+  try{let b=await IDB.get(k);
+    if(!b&&generar){const tts=await motorVoz();
+      if(!TTS_AVISO&&!(await tts.stored()).includes(VOZ_ID)){TTS_AVISO=true;toast("Preparando la voz que leerá tus intenciones…",3500,true)}
+      b=await tts.predict({text:texto.replace(/[.!?¡¿]*$/,"")+".",voiceId:VOZ_ID});if(b){await IDB.set(k,b);try{localStorage.setItem("hubdefe:voz-lista","1")}catch(e){}}}
+    if(b){URLS[k]=URL.createObjectURL(b);return URLS[k]}}catch(e){}
+  return null}
+let PREP=null,PREP_OTRA=false;
+function prepararVoces(){ // genera en segundo plano la voz de las intenciones escritas a mano
+  if(PREP){PREP_OTRA=true;return PREP} // si llega una intención nueva mientras tanto, se hace otra pasada al terminar
+  if(!navigator.onLine&&!TTS)return null;
+  PREP=(async()=>{do{PREP_OTRA=false;try{const G=await misInt(),fr=await cargarFrases();
+    for(const x of activasG(G)){if(fr&&fr.sugerencias[x.texto])continue;await audioIntencion(x.texto)}}catch(e){}}while(PREP_OTRA);PREP=null})();return PREP}
 let FRASES=null;
 function cargarFrases(){if(!FRASES)FRASES=fetch("frases.json").then(r=>r.ok?r.json():null).catch(()=>null);return FRASES}
 /* En iPhone la voz del teléfono solo funciona si se activó con un toque: se activa en el primer «reproducir» */
-let VOZ_LISTA=false;function activarVoz(){if(VOZ_LISTA||!("speechSynthesis" in window))return;VOZ_LISTA=true;try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}}
+let VOZ_LISTA=false;function activarVoz(){try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
+  if(VOZ_LISTA||!("speechSynthesis" in window))return;VOZ_LISTA=true;try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}}
+function vocesListas(){return new Promise(r=>{if(speechSynthesis.getVoices().length)return r();const t=setTimeout(r,1200);speechSynthesis.addEventListener("voiceschanged",()=>{clearTimeout(t);r()},{once:true})})}
 function vozEs(){const vs=speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang));if(!vs.length)return null;
   const reg=v=>/es[-_](CO|MX|US|419|AR|CL|PE|VE)/i.test(v.lang)?0:1,cal=v=>/natural|neural|premium|enhanced|mejorad/i.test(v.name)?0:/paulina|m[oó]nica|helena|google|sabina|juana|isabela/i.test(v.name)?1:2;
   return vs.slice().sort((a,b)=>cal(a)-cal(b)||reg(a)-reg(b))[0]}
@@ -1217,13 +1263,13 @@ async function speakEs(text,tk,rate){ // nunca espera más de lo razonable, aunq
 }
 async function speakEs0(text,tk,rate){
   if(caps.tts){try{await caps.tts.speak(text,{voice:"airy",rate:Math.max(.7,Math.min(1.5,rate*.95))});return}catch(e){if(tk!==P.tk)return}}
-  if("speechSynthesis" in window){await new Promise(res=>{const ut=new SpeechSynthesisUtterance(text);const vz=vozEs();ut.voice=vz;ut.lang=vz?vz.lang:"es-419";ut.rate=.95*rate;
+  if("speechSynthesis" in window){await vocesListas();await new Promise(res=>{const ut=new SpeechSynthesisUtterance(text);const vz=vozEs();ut.voice=vz;ut.lang=vz?vz.lang:"es-MX";ut.rate=.95*rate;
     ut.onend=res;ut.onerror=res;speechSynthesis.speak(ut);const k=setInterval(()=>{if(tk!==P.tk){speechSynthesis.cancel();clearInterval(k);res()}},300)})}
 }
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.19-f5941d";
+const APP_VERSION="2026.11.20-1361e6";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
