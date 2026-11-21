@@ -44,7 +44,12 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .stage{min-height:100%;display:flex;align-items:center;justify-content:center;padding:28px}
 .app{position:relative;width:100%;max-width:420px;height:min(880px,calc(100dvh - 56px));background:var(--bg);border-radius:38px;overflow:hidden;
   box-shadow:0 0 0 10px #0E1030,0 0 0 11px #3B3F7A,0 40px 80px rgba(0,0,0,.45);display:flex;flex-direction:column}
-@media (max-width:520px){.stage{padding:0}.app{max-width:none;height:100dvh;border-radius:0;box-shadow:none}}
+/* En el teléfono la app ocupa toda la pantalla anclada a los cuatro bordes. No se usa 100dvh: en el iPhone,
+   con la app instalada, esa medida resulta más baja que la pantalla y dejaba franjas vacías arriba y abajo. */
+@media (max-width:520px),(display-mode:standalone){
+  html,body{height:100%;overflow:hidden;background:var(--bg)}
+  .stage{padding:0;min-height:0}
+  .app{position:fixed;inset:0;width:auto;height:auto;max-width:none;border-radius:0;box-shadow:none}}
 .screen{flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:calc(var(--safe-t) + 8px) 0 calc(var(--tabh) + var(--safe-b) + 24px);scrollbar-width:none}
 .screen::-webkit-scrollbar{display:none}
 .pad{padding:0 20px}
@@ -435,8 +440,9 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 #pSpeed{min-width:62px}
 #velPrueba{display:flex;align-items:center;justify-content:center;gap:10px}
 .bi{display:inline-grid;width:22px;height:22px}.bi svg{width:22px;height:22px}
-.toast{position:absolute;left:50%;top:calc(var(--safe-t) + 14px);z-index:60;transform:translate(-50%,-140%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:16px;font-size:14px;font-weight:500;transition:transform .35s var(--ease);max-width:88%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.toast.on{transform:translate(-50%,0)}
+.toast{position:absolute;left:50%;top:calc(var(--safe-t) + 14px);z-index:60;transform:translate(-50%,calc(-100% - var(--safe-t) - 30px));visibility:hidden;pointer-events:none;background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:16px;font-size:14px;font-weight:500;transition:transform .35s var(--ease);max-width:88%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.toast.on{transform:translate(-50%,0);visibility:visible;pointer-events:auto}
+.toast{transition:transform .35s var(--ease),visibility 0s linear .35s}.toast.on{transition:transform .35s var(--ease),visibility 0s}
 .hidden{display:none!important}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
@@ -987,6 +993,7 @@ function aplicarVel(){const v=vel();aud.preservesPitch=aud.mozPreservesPitch=aud
 setTimeout(()=>{try{prepararVoces()}catch(e){}},4000);
 /* Pedir al teléfono que no borre los datos (velocidad, intenciones, avance): Safari los borra tras 7 días sin uso si la app no está instalada */
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{})}catch(e){}
+const SILENCIO="audio/silencio-1s.mp3";
 /* Pausa extra entre oraciones al acelerar: así el paso de una oración a otra nunca se acorta */
 const pausaExtra=v=>v>1?Math.round((v-1)*1600):0;
 const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"hoy",elapsedBefore:[],total:0,
@@ -1075,7 +1082,9 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
     const pr=aud.play();if(pr&&pr.catch)pr.catch(err=>{cl();
       // Si otro toque ya cambió el audio (AbortError o un salto posterior), no es un fallo: el nuevo audio sigue sonando
       if(tk!==this.tk){res();return}
-      this.playing=false;this.ui();toast("Toca el botón de reproducir para escuchar");rej(err)});
+      // El teléfono a veces bloquea un audio justo después de otro sonido (p. ej. la voz del teléfono): reintentar solo
+      setTimeout(()=>{if(tk!==this.tk)return res();aud.addEventListener("ended",done);aud.addEventListener("error",fail);
+        const p2=aud.play();if(p2&&p2.catch)p2.catch(e2=>{cl();if(tk!==this.tk)return res();this.playing=false;this.ui();toast("Toca el botón de reproducir para escuchar");rej(e2)})},450)});
     const nx=this.items[this.i+1];if(nx&&nx.src&&nx.src!==src){const a=new Audio();a.preload="auto";a.src=nx.src}
   })},
   /* Presenta las intenciones con la voz de los rezos (Salomé) cuando hay audio grabado: la frase de entrada y
@@ -1095,9 +1104,11 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
     lis.forEach(l=>l.classList.remove("dice"))},
   async pausa(it,tk){const cd=$("#"+it.cd);
     if(it.texts.length){cd.textContent="Presentando tus intenciones…";await this.leerIntenciones(it,tk);if(tk!==this.tk)return}
-    let s=it.secs;await new Promise(res=>{
-      const draw=()=>{cd.innerHTML=`Silencio: <strong>${s}</strong> s <button class="skip" id="skipP">Continuar</button>`;const b=$("#skipP");if(b)b.onclick=ev=>{ev.stopPropagation();clearInterval(this.cd);res()}};
-      draw();this.cd=setInterval(()=>{if(tk!==this.tk){clearInterval(this.cd);return res()}s--;if(s<=0){clearInterval(this.cd);return res()}draw()},1000)});
+    /* El silencio suena de verdad (un audio de 1 s repetido): con la pantalla apagada el iPhone pausa la app
+       si no suena nada, y el rezo se quedaba esperando a que se tocara Play. Así sigue solo hasta el final. */
+    let s=it.secs,saltar=false;
+    const draw=()=>{cd.innerHTML=`Silencio: <strong>${Math.max(0,Math.ceil(s))}</strong> s <button class="skip" id="skipP">Continuar</button>`;const b=$("#skipP");if(b)b.onclick=ev=>{ev.stopPropagation();saltar=true;try{aud.currentTime=aud.duration||1}catch(e){}}};
+    while(s>0&&!saltar&&tk===this.tk){draw();try{await this.audio(SILENCIO,tk)}catch(e){break}s-=vel()} // cada vuelta dura 1 s/vel
     cd.textContent=it.texts.length||it.title==="Intenciones"?"Un momento de silencio para tus peticiones":"Silencio"},
   karaoke(){ // bucle ligero mientras suena: marca la palabra actual
     cancelAnimationFrame(this.raf);
@@ -1283,7 +1294,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.21-5056e0";
+const APP_VERSION="2026.11.21-ca08dc";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
