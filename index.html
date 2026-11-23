@@ -1141,7 +1141,8 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
       if(this.playing&&it&&it.kind==="audio"&&it.words){const el=document.getElementById(it.el);
         if(el){const ms=aud.currentTime*1000;const ws=el.querySelectorAll(".w");let k=-1;
           for(let j=0;j<ws.length;j++){const t=+ws[j].dataset.t;if(t>=0&&t<=ms+40)k=j;else if(t>ms+40)break}
-          if(k!==this.wk||el!==this.wel){if(this.wcur)this.wcur.classList.remove("cur");this.wcur=k>=0?ws[k]:null;if(this.wcur)this.wcur.classList.add("cur");this.wk=k;this.wel=el}}}
+          if(k!==this.wk||el!==this.wel){if(this.wcur)this.wcur.classList.remove("cur");this.wcur=k>=0?ws[k]:null;if(this.wcur)this.wcur.classList.add("cur");this.wk=k;this.wel=el;if(this.wcur)this.seguir(this.wcur)}
+          else if(!ws.length&&it.dur)this.seguir(el,Math.min(1,aud.currentTime/it.dur))}}
       else if(this.wcur){this.wcur.classList.remove("cur");this.wcur=null;this.wk=-1}
       const now=performance.now();if(this.playing&&it&&it.kind==="audio"&&now-(this.lastT||0)>250){this.lastT=now;
         const e=(this.elapsedBefore[this.i]||0)+Math.min(aud.currentTime||0,it.dur),pct=this.total?e/this.total*100:0;
@@ -1149,7 +1150,16 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
       if(this.playing)this.raf=requestAnimationFrame(step)};
     this.raf=requestAnimationFrame(step);
   },
+  /* Desplazamiento que acompaña la lectura dentro del párrafo: cuando la palabra que suena baja del 62 % de la
+     zona de texto (o queda por encima de lo visible), la línea se lleva al 30 %. Si la persona movió el texto con
+     el dedo hace menos de 5 s, no se le quita el control. Sin marcas por palabra, sigue la proporción del audio. */
+  seguir(node,frac){const L=$("#lyrics");if(!L||!node||Date.now()-(this.dedo||0)<5000)return;
+    const r=L.getBoundingClientRect(),n=node.getBoundingClientRect(),H=L.clientHeight;
+    const y=frac==null?n.top-r.top:n.top-r.top+n.height*frac,alto=frac==null?n.height:24;
+    const tope=H*(H<260?.72:.62),arriba=H*.06;
+    if(y+alto>tope||y<arriba){const dest=L.scrollTop+y-H*(H<260?.22:.30);if(Math.abs(dest-(this.destino||-1e9))<4)return;this.destino=dest;L.scrollTo({top:dest,behavior:"smooth"})}},
   focus(){
+    this.destino=null;
     document.querySelectorAll("#lyrics .now").forEach(e=>e.classList.remove("now"));
     const it=this.items[this.i];let el=null;
     if(it&&it.el)el=document.getElementById(it.el);else for(let k=this.i;k<this.items.length&&k<this.i+2;k++){el=document.getElementById("ly"+k)||(this.items[k]&&this.items[k].el&&document.getElementById(this.items[k].el));if(el)break}
@@ -1238,6 +1248,7 @@ function vistaImagen(on){const pl=$("#player");on=pl.classList.toggle("cover",on
   $("#pImgBtn").setAttribute("aria-label",on?"Volver al texto (toca dos veces)":"Ver la imagen completa (toca dos veces)");
   setTimeout(()=>P.focus(),60)}
 $("#pView").onclick=()=>vistaImagen();
+["touchmove","wheel"].forEach(ev=>$("#lyrics").addEventListener(ev,()=>{P.dedo=Date.now()},{passive:true}));
 $("#pImgBtn").onclick=dobleToque(()=>vistaImagen(),()=>toast($("#player").classList.contains("cover")?"Toca dos veces la imagen para volver al texto":"Toca dos veces la imagen para verla completa"));
 let VISOR=null;
 const tocarCustodia=dobleToque(()=>abrirVisor(),()=>toast("Toca dos veces la imagen para verla completa"));
@@ -1354,7 +1365,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.22-554c1b";
+const APP_VERSION="2026.11.22-179b5f";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
