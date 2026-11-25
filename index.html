@@ -249,7 +249,8 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .ly.now .w.cur{background:rgba(232,182,76,.45);color:#fff}
 @media (prefers-reduced-motion:reduce){.ly .w{transition:none}}
 .ly.head{font-family:var(--display);font-size:15px;opacity:.75;color:var(--oro);margin:34px 0 10px;cursor:default;transform:none}
-.ly.head:first-child{margin-top:0}
+.ly.head:first-child,.ly-esp+.ly.head{margin-top:0}
+.ly-esp{flex:none;pointer-events:none}
 .ly.cita{opacity:.6;font-size:17px;font-style:italic;line-height:1.4;color:var(--oro);margin:-4px 0 16px}
 .ly-int{margin:0 0 22px;padding:16px;border-radius:20px;background:rgba(229,120,155,.18);border:1px solid rgba(229,120,155,.45);opacity:.4;transition:opacity .4s}
 .ly-int.now{opacity:1}
@@ -1053,7 +1054,7 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
     });
     let acc=0;this.elapsedBefore=this.items.map(it=>{const a=acc;acc+=it.dur;return a});this.total=acc;
     this.meta={id,n,cn:c.n,type:dev.type,dev:dev.title,label:day.label,title:day.title,img:day.img};
-    $("#lyrics").innerHTML=html;
+    $("#lyrics").innerHTML='<div class="ly-esp" aria-hidden="true"></div>'+html+'<div class="ly-esp" aria-hidden="true"></div>';
     $("#lyrics").querySelectorAll("[data-i]").forEach(el=>el.onclick=ev=>this.tapText(el,ev));
     $("#chips").innerHTML=this.sections.map((s,k)=>`<button class="chip" data-k="${k}">${esc(s.label)}</button>`).join("");
     $("#chips").querySelectorAll(".chip").forEach(ch=>ch.onclick=()=>this.jump(this.sections[+ch.dataset.k].start));
@@ -1154,22 +1155,35 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
       if(this.playing)this.raf=requestAnimationFrame(step)};
     this.raf=requestAnimationFrame(step);
   },
-  /* Desplazamiento que acompaña la lectura dentro del párrafo: cuando la palabra que suena baja del 62 % de la
-     zona de texto (o queda por encima de lo visible), la línea se lleva al 30 %. Si la persona movió el texto con
-     el dedo hace menos de 5 s, no se le quita el control. Sin marcas por palabra, sigue la proporción del audio. */
-  seguir(node,frac){const L=$("#lyrics");if(!L||!node||Date.now()-(this.dedo||0)<5000)return;
-    const r=L.getBoundingClientRect(),n=node.getBoundingClientRect(),H=L.clientHeight;
-    const y=frac==null?n.top-r.top:n.top-r.top+n.height*frac,alto=frac==null?n.height:24;
-    const tope=H*(H<260?.72:.62),arriba=H*.06;
-    if(y+alto>tope||y<arriba){const dest=L.scrollTop+y-H*(H<260?.22:.30);if(Math.abs(dest-(this.destino||-1e9))<4)return;this.destino=dest;L.scrollTo({top:dest,behavior:"smooth"})}},
+  /* La línea que se está leyendo queda siempre centrada en la parte visible del texto (47 %: el centro de la
+     franja nítida, entre el difuminado de arriba y el de abajo). Se recentra cada vez que la lectura pasa a otra
+     línea, con una animación propia (requestAnimationFrame), sin depender del desplazamiento suave del navegador.
+     Si la persona movió el texto con el dedo hace menos de 5 s, no se le quita el control. */
+  CENTRO:.47,
+  centrar(y,forzar){const L=$("#lyrics");if(!L)return;if(!forzar&&Date.now()-(this.dedo||0)<5000)return;
+    const H=L.clientHeight,max=L.scrollHeight-H,dest=Math.max(0,Math.min(max,L.scrollTop+y-H*this.CENTRO));
+    const ahora=this.anim?this.anim.to:L.scrollTop;if(!forzar&&Math.abs(dest-ahora)<10)return;
+    const from=L.scrollTop,t0=performance.now(),dur=Math.min(650,250+Math.abs(dest-from)*.6);cancelAnimationFrame(this.anim&&this.anim.raf);
+    const a=this.anim={to:dest,raf:0};const paso=t=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);L.scrollTop=from+(dest-from)*e;
+      if(k<1&&this.anim===a)a.raf=requestAnimationFrame(paso);else if(this.anim===a)this.anim=null};a.raf=requestAnimationFrame(paso)},
+  // y del centro de la línea (o de la proporción frac del párrafo) respecto al borde de arriba de la zona de texto
+  yLinea(node,frac){const L=$("#lyrics"),r=L.getBoundingClientRect(),n=node.getBoundingClientRect();
+    if(frac!=null)return n.top-r.top+n.height*frac;
+    const lh=parseFloat(getComputedStyle(node).lineHeight)||node.offsetHeight||30;
+    return n.height>lh*1.6&&!node.classList.contains("w")?n.top-r.top+lh/2:(n.top+n.bottom)/2-r.top},
+  seguir(node,frac){if(node)this.centrar(this.yLinea(node,frac))},
+  // Espacio vacío arriba y abajo del texto (no relleno CSS: crecería la caja) para poder centrar también
+  // la primera y la última línea.
+  ajustarRelleno(){const L=$("#lyrics");if(!L)return;const h=Math.ceil(L.clientHeight*.5)+"px";L.querySelectorAll(".ly-esp").forEach(e=>{if(e.style.height!==h)e.style.height=h})},
   focus(){
-    this.destino=null;
     document.querySelectorAll("#lyrics .now").forEach(e=>e.classList.remove("now"));
     const it=this.items[this.i];let el=null;
     if(it&&it.el)el=document.getElementById(it.el);else for(let k=this.i;k<this.items.length&&k<this.i+2;k++){el=document.getElementById("ly"+k)||(this.items[k]&&this.items[k].el&&document.getElementById(this.items[k].el));if(el)break}
     if(!el&&it&&it.kind==="pausa")el=$("#"+it.cd)&&$("#"+it.cd).closest("[data-i]");
     if(it&&it.bead){document.querySelectorAll("#"+it.bead.id+" i").forEach((b,k)=>{b.classList.toggle("on",k<it.bead.k);b.classList.toggle("cur",k===it.bead.k)})}
-    if(el){el.classList.add("now");const L=$("#lyrics");L.scrollTo({top:el.offsetTop-L.clientHeight*.32,behavior:"smooth"})}
+    if(el){el.classList.add("now");this.ajustarRelleno();
+      // al empezar un párrafo, se centra su primera línea (o la palabra que suena, si se tocó una en medio)
+      const w=(this.wel===el&&this.wcur)||el.querySelector(".w");this.centrar(this.yLinea(w||el),true)}
   },
   ui(){
     const pi=this.playing?I.pause:I.play;$("#pPlay").innerHTML=pi;$("#miniPP").innerHTML=pi;
@@ -1205,7 +1219,7 @@ async function openPlayer(id,n){marcarUso(id);
   if(COVER_HASTA>Date.now()){COVER_HASTA=0;vistaImagen(true)}
   $("#player").classList.add("open");$("#mini").classList.add("off");syncMini();setTimeout(()=>P.focus(),450);
 }
-function closePlayer(nav=true){
+function closePlayer(nav=true){setTimeout(()=>{if(swReg&&swReg.waiting&&navigator.serviceWorker.controller)swReg.waiting.postMessage("skipWaiting")},400);
   if(!$("#player").classList.contains("open"))return;
   $("#player").classList.remove("open");
   if(P.meta&&(P.playing||P.i>0&&P.i<P.items.length))$("#mini").classList.remove("off");
@@ -1252,6 +1266,7 @@ function vistaImagen(on){const pl=$("#player");on=pl.classList.toggle("cover",on
   $("#pImgBtn").setAttribute("aria-label",on?"Volver al texto (toca dos veces)":"Ver la imagen completa (toca dos veces)");
   setTimeout(()=>P.focus(),60)}
 $("#pView").onclick=()=>vistaImagen();
+addEventListener("resize",()=>{P.ajustarRelleno();if(P.wcur&&P.playing)P.seguir(P.wcur)});
 ["touchmove","wheel"].forEach(ev=>$("#lyrics").addEventListener(ev,()=>{P.dedo=Date.now()},{passive:true}));
 $("#pImgBtn").onclick=dobleToque(()=>vistaImagen(),()=>toast($("#player").classList.contains("cover")?"Toca dos veces la imagen para volver al texto":"Toca dos veces la imagen para verla completa"));
 let VISOR=null;
@@ -1369,7 +1384,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.22-860d3b";
+const APP_VERSION="2026.11.25-b1c1a2";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
@@ -1428,7 +1443,10 @@ async function guardarArchivo(filename,data,mime="text/calendar"){
 }
 /* Service worker: modo sin conexión y aviso de nueva versión */
 let swReg=null;
-function avisoActualizacion(w){if($("#updBar"))return;const d=document.createElement("div");d.className="update-bar";d.id="updBar";
+/* Las actualizaciones se aplican solas cuando no hay un rezo abierto (antes había que tocar «Actualizar», y la
+   app podía quedarse días con la versión vieja). Con un rezo abierto, se aplica al cerrarlo. */
+function avisoActualizacion(w){if(!$("#player").classList.contains("open")){w.postMessage("skipWaiting");return}
+  if($("#updBar"))return;const d=document.createElement("div");d.className="update-bar";d.id="updBar";
   d.innerHTML='Hay una nueva versión de Hub de Fe <button>Actualizar</button>';d.querySelector("button").onclick=()=>{w.postMessage("skipWaiting")};$("#app").appendChild(d)}
 async function buscarActualizacion(manual){if(!swReg){if(manual)toast(IN_CLAUDE?"Dentro de Claude siempre ves la última versión":"Las actualizaciones no están disponibles en este navegador");return}
   try{await swReg.update()}catch(e){}if(swReg.waiting)avisoActualizacion(swReg.waiting);else if(manual)toast("Ya tienes la última versión ("+APP_VERSION+")")}
