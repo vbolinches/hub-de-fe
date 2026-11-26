@@ -251,6 +251,9 @@ h1,h2,h3{margin:0;font-weight:400;font-family:var(--display);letter-spacing:.2px
 .ly.head{font-family:var(--display);font-size:15px;opacity:.75;color:var(--oro);margin:34px 0 10px;cursor:default;transform:none}
 .ly.head:first-child,.ly-esp+.ly.head{margin-top:0}
 .ly-esp{flex:none;pointer-events:none}
+.ly-fig{margin:26px auto 14px;text-align:center}
+.ly-fig img{display:inline-block;max-width:78%;max-height:300px;width:auto;height:auto;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.45);border:3px solid rgba(232,183,74,.55)}
+.player.cover .ly-fig{display:none}
 .ly.cita{opacity:.6;font-size:17px;font-style:italic;line-height:1.4;color:var(--oro);margin:-4px 0 16px}
 .ly-int{margin:0 0 22px;padding:16px;border-radius:20px;background:rgba(229,120,155,.18);border:1px solid rgba(229,120,155,.45);opacity:.4;transition:opacity .4s}
 .ly-int.now{opacity:1}
@@ -1040,6 +1043,8 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
         html+=`<div class="ly-int" id="ly${idx}" data-i="${idx}"><div class="h">Intenciones de esta ${u(dev)}</div>${ints.length?`<ul>${ints.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:`<div style="opacity:.8;margin-top:6px">Pide en silencio las gracias que deseas.</div>`}<div class="cd" id="cd${idx}">Un momento de silencio para tus peticiones</div></div>`;
         this.items.push({kind:"pausa",title:"Intenciones",texts:ints,secs:15,cd:"cd"+idx,el:"ly"+idx,dur:(ints.join(" ").length/14)+15});return;
       }
+      // Ilustración del día de la novena original (antes del título de la lectura, como en el folleto)
+      if(b.kind==="lectura"&&day.ilus)html+=`<figure class="ly-fig"><img src="${day.ilus}" alt="Ilustración: ${esc(b.title)}"></figure>`;
       if(b.title)html+=`<div class="ly head">${esc(b.kind==="lectura"&&dev.type==="novena"&&dev.id==="divino-nino"?day.label+": "+b.title:b.title)}</div>`;
       // La cita (p. ej. «Lectura del santo Evangelio según san Lucas (Lucas 1, 26 y siguientes)») va escrita bajo el
       // título y se ilumina mientras la voz la anuncia.
@@ -1106,7 +1111,13 @@ const P={items:[],sections:[],i:0,playing:false,meta:null,tk:0,big:0,lastTab:"ho
     if(aud.readyState>=1)setT();else if(seek>0)aud.addEventListener("loadedmetadata",setT,{once:true});else setT();
     aplicarVel();
     const done=()=>{cl();res()},fail=()=>{cl();rej(new Error("audio"))};
-    const cl=()=>{aud.removeEventListener("ended",done);aud.removeEventListener("error",fail);clearInterval(w)};
+    /* En el iPhone, algo del sistema (la voz del teléfono que se prepara, la sesión de audio) puede detener el audio
+       justo al empezar: el rezo quedaba parado y había que tocar Play otra vez. Si se detiene solo en los primeros
+       4 s sin que nadie lo pausara, se reanuda (hasta 3 veces). */
+    const t0=Date.now();let reanudar=0;
+    const pausado=()=>{if(tk===this.tk&&this.playing&&!aud.ended&&Date.now()-t0<4000&&reanudar<3){reanudar++;setTimeout(()=>{if(tk===this.tk&&this.playing&&aud.paused&&!aud.ended){const r=aud.play();r&&r.catch&&r.catch(()=>{})}},120)}};
+    aud.addEventListener("pause",pausado);
+    const cl=()=>{aud.removeEventListener("ended",done);aud.removeEventListener("error",fail);aud.removeEventListener("pause",pausado);clearInterval(w)};
     const w=setInterval(()=>{if(tk!==this.tk){cl();res()}},250);
     aud.addEventListener("ended",done);aud.addEventListener("error",fail);
     const pr=aud.play();if(pr&&pr.catch)pr.catch(err=>{cl();
@@ -1366,8 +1377,12 @@ function prepararVoces(){ // genera en segundo plano la voz de las intenciones e
 let FRASES=null;
 function cargarFrases(){if(!FRASES)FRASES=fetch("frases.json").then(r=>r.ok?r.json():null).catch(()=>null);return FRASES}
 /* En iPhone la voz del teléfono solo funciona si se activó con un toque: se activa en el primer «reproducir» */
-let VOZ_LISTA=false;function activarVoz(){try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
-  if(VOZ_LISTA||!("speechSynthesis" in window))return;VOZ_LISTA=true;try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}}
+/* activarVoz() se llama al tocar Play: solo fija la sesión de audio. La voz del teléfono (respaldo) se "despierta"
+   con un toque cualquiera que NO sea Play y sin audio sonando: hacerlo en el mismo toque de Play detenía el rezo
+   al empezar en el iPhone. */
+let VOZ_LISTA=false;function activarVoz(){try{if(navigator.audioSession&&navigator.audioSession.type!=="playback")navigator.audioSession.type="playback"}catch(e){}}
+function despertarVozTelefono(){if(VOZ_LISTA||!("speechSynthesis" in window)||!aud.paused)return;VOZ_LISTA=true;try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}}
+document.addEventListener("click",e=>{if(aud.paused)activarVoz();if(e.target.closest("#pPlay,#miniPP,#player"))return;despertarVozTelefono()},true);
 function vocesListas(){return new Promise(r=>{if(speechSynthesis.getVoices().length)return r();const t=setTimeout(r,1200);speechSynthesis.addEventListener("voiceschanged",()=>{clearTimeout(t);r()},{once:true})})}
 function vozEs(){const vs=speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang));if(!vs.length)return null;
   const reg=v=>/es[-_](CO|MX|US|419|AR|CL|PE|VE)/i.test(v.lang)?0:1,cal=v=>/natural|neural|premium|enhanced|mejorad/i.test(v.name)?0:/paulina|m[oó]nica|helena|google|sabina|juana|isabela/i.test(v.name)?1:2;
@@ -1384,7 +1399,7 @@ async function speakEs0(text,tk,rate){
 
 
 /* ================= App instalable: compartir, instalar, actualizar ================= */
-const APP_VERSION="2026.11.25-b1c1a2";
+const APP_VERSION="2026.11.25-728d31";
 const PUBLIC_URL="https://vbolinches.github.io/hub-de-fe/";
 const IN_CLAUDE=(()=>{try{return !!window.claude}catch(e){return false}})();
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
